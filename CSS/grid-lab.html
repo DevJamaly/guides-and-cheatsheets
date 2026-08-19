@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grid Lab — learn CSS Grid, then build with it</title>
+<style>
+:root{
+  --bg:#f1f0f6;--panel:#ffffff;--panel2:#f7f6fb;--text:#1c1a2e;--muted:#6c6983;--border:#dddbe8;
+  --purple:#7d5ba6;--purple-deep:#5e3f86;--purple-soft:#ebe3f5;
+  --orange:#f39a2a;--orange-deep:#c9761a;--orange-text:#3b2306;
+  --code:#161829;--code-text:#e8e8f2;--line:#1e9fb0;--sel:#e2477f;--ok:#2f9e5f;--danger:#c9453d;
+  --shadow:0 6px 24px rgba(30,20,60,.08);--r:14px;--hh:58px;
+}
+[data-theme="dark"]{
+  --bg:#131220;--panel:#1c1b2b;--panel2:#22212f;--text:#eeedf5;--muted:#a3a0ba;--border:#312f45;
+  --purple:#9a78c8;--purple-deep:#7a58a8;--purple-soft:#2c2340;
+  --orange:#f6a742;--orange-deep:#d98a25;--orange-text:#2a1a04;
+  --code:#0c0d17;--code-text:#e8e8f2;--line:#3fc0d0;--sel:#ff6a9d;--ok:#4cc57e;--danger:#ff7b73;
+  --shadow:0 6px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+code,pre,kbd,textarea,.mono{font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,"Liberation Mono",monospace}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.gi:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+[hidden]{display:none!important}
+p code,li code,.gotcha code,.intro code{background:var(--purple-soft);color:var(--purple-deep);padding:1px 6px;border-radius:5px;font-size:.9em}
+[data-theme="dark"] p code,[data-theme="dark"] .gotcha code,[data-theme="dark"] .intro code{color:#d9c6ff}
+.muted{color:var(--muted);font-weight:400}
+.hint{color:var(--muted);font-size:.9rem;margin:0}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:16px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:1.15rem;white-space:nowrap}
+.brand .mark{width:30px;height:22px;border-radius:5px;background:var(--purple);display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;padding:3px}
+.brand .mark i{background:var(--orange);border-radius:2px}
+.brand .mark i:first-child{grid-column:1 / 3}
+.tabs{display:flex;gap:4px;margin:0 auto;background:var(--panel2);padding:4px;border-radius:999px;border:1px solid var(--border)}
+.tabs button{border:0;background:transparent;padding:6px 18px;border-radius:999px;font-weight:600;color:var(--muted)}
+.tabs button.on{background:var(--purple);color:#fff}
+.theme{border:1px solid var(--border);background:var(--panel2);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+
+/* ---------- views ---------- */
+.view{display:none}
+.view.on{display:grid;align-items:start}
+#learn.on{grid-template-columns:260px minmax(0,1fr)}
+#playground.on{grid-template-columns:360px minmax(0,1fr)}
+
+/* ---------- learn sidebar ---------- */
+.side{border-right:1px solid var(--border);background:var(--panel);padding:14px 12px;position:sticky;top:var(--hh);height:calc(100vh - var(--hh));overflow:auto;display:flex;flex-direction:column}
+.side nav{flex:1}
+.side h4{margin:14px 8px 6px;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.side nav button{display:flex;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:7px 10px;border-radius:8px;font-weight:500;color:var(--text);font-size:.92rem}
+.side nav button:hover{background:var(--panel2)}
+.side nav button.on{background:var(--purple-soft);color:var(--purple-deep);font-weight:700}
+[data-theme="dark"] .side nav button.on{color:#e6d6ff}
+.side nav button i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:9px;background:var(--purple);flex:none}
+.side nav button.item-prop i{background:var(--orange)}
+.side nav button.recipe i{background:linear-gradient(90deg,var(--purple),var(--orange))}
+.chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);padding:12px 8px 4px;border-top:1px solid var(--border);margin-top:10px}
+.chk input{accent-color:var(--purple)}
+
+/* ---------- topic view ---------- */
+.topic{padding:28px 32px 48px;max-width:980px}
+.thead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.thead h1{margin:0;font-size:2rem;letter-spacing:-.03em;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace}
+.pill{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple-deep)}
+[data-theme="dark"] .pill{color:#e6d6ff}
+.pill.orange{background:#fdebd3;color:#8a4d05}
+[data-theme="dark"] .pill.orange{background:#3d2a10;color:#ffcf8b}
+.intro{font-size:1.05rem;margin:6px 0 18px;max-width:72ch}
+.stage{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);padding:16px;overflow:auto}
+.gc{position:relative;background:var(--purple);border-radius:12px;padding:16px;min-height:60px;box-shadow:inset 0 0 0 3px var(--purple-deep)}
+.gi{background:var(--orange);color:var(--orange-text);font-weight:700;border-radius:8px;padding:10px 14px;min-height:48px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep);user-select:none;white-space:nowrap;min-width:0}
+.gi.target{box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep),0 0 0 3px var(--purple),0 0 0 6px var(--line)}
+.gi.selected{box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep),0 0 0 3px var(--purple),0 0 0 6px var(--sel)}
+.stage.pg .gi{cursor:pointer}
+.stage.mini .gi{padding:6px 8px;font-size:.78rem;min-height:34px}
+.legend{display:flex;gap:16px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.vals{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.vals button,.seg button{border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:6px 12px;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;font-size:.85rem}
+.vals button:hover,.seg button:hover{border-color:var(--purple)}
+.vals button.on,.seg button.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.vals.orange button.on,.seg.orange button.on{background:var(--orange);border-color:var(--orange);color:var(--orange-text)}
+pre.code{background:var(--code);color:var(--code-text);padding:14px 18px;border-radius:12px;font-size:.88rem;line-height:1.55;overflow:auto;margin:0;tab-size:2}
+.c-sel{color:#c9a4ff}.c-prop{color:#7fd8ff}.c-val{color:#ffe08a}.c-cm{color:#8b8ea6}
+.gotcha{border-left:4px solid var(--orange);background:var(--panel);padding:12px 16px;border-radius:0 12px 12px 0;margin-top:18px;max-width:72ch}
+.gotcha strong{color:var(--orange-deep)}
+[data-theme="dark"] .gotcha strong{color:var(--orange)}
+.actions{margin-top:22px}
+.btn{border:0;background:var(--purple);color:#fff;padding:9px 16px;border-radius:10px;font-weight:600}
+.btn:hover{background:var(--purple-deep)}
+.btn.ghost{background:var(--panel);border:1px solid var(--border);color:var(--text)}
+.btn.ghost:hover{background:var(--panel2)}
+.btn.ghost.on{border-color:var(--purple);color:var(--purple-deep);background:var(--purple-soft)}
+[data-theme="dark"] .btn.ghost.on{color:#e6d6ff}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:6px 11px;font-size:.85rem;border-radius:8px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:1.05rem}
+.card p{margin:0;color:var(--muted);font-size:.9rem}
+.card .btn{align-self:flex-start;margin-top:auto}
+
+/* ---------- grid-line overlay ---------- */
+.glines{position:absolute;inset:0;pointer-events:none;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;font-size:.66rem;font-weight:700}
+.gl{position:absolute;border:0 dashed var(--line);opacity:.85}
+.gl.v{top:0;bottom:0;border-left-width:1.5px}
+.gl.h{left:0;right:0;border-top-width:1.5px}
+.gn{position:absolute;background:var(--line);color:#fff;border-radius:4px;padding:0 4px;line-height:14px;min-width:14px;text-align:center}
+.gn.c{top:1px;transform:translateX(-50%)}
+.gn.r{left:1px;transform:translateY(-50%)}
+
+/* ---------- playground ---------- */
+.controls{border-right:1px solid var(--border);background:var(--panel);padding:16px;position:sticky;top:var(--hh);height:calc(100vh - var(--hh));overflow:auto}
+.controls h3{display:flex;align-items:center;gap:8px;margin:6px 0 12px;font-size:.95rem}
+.controls h4{margin:0 0 10px;font-size:.9rem;color:var(--purple-deep)}
+[data-theme="dark"] .controls h4{color:#e6d6ff}
+.dot{display:inline-block;width:11px;height:11px;border-radius:3px}
+.dot.p{background:var(--purple)}.dot.o{background:var(--orange)}
+.row{margin-bottom:12px}
+.lbl{display:flex;justify-content:space-between;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace}
+.lbl span{text-transform:none;color:var(--text)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:5px 9px;font-size:.8rem}
+.seg.chips{margin-top:6px}
+.seg.chips button{padding:3px 8px;font-size:.75rem}
+input[type=range]{width:100%;accent-color:var(--purple);margin:0}
+.num,textarea.num{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--text)}
+textarea.num{resize:vertical;min-height:64px;line-height:1.4}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.sep{border:0;border-top:1px solid var(--border);margin:16px 0}
+.pgmain{padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stage.pg{min-height:220px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.card.ch select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+#chStatus{font-weight:700;font-size:.9rem;min-height:1.4em}
+#chStatus.ok{color:var(--ok)}
+#chStatus.no{color:var(--muted)}
+details.help{font-size:.82rem;color:var(--muted);margin:-6px 0 12px}
+details.help summary{cursor:pointer}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--code);color:var(--code-text);padding:10px 16px;border-radius:10px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;box-shadow:var(--shadow)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:880px){
+  #learn.on,#playground.on{grid-template-columns:1fr}
+  .side,.controls{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+  .side nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:6px}
+  .side nav h4{display:none}
+  .side nav button{width:auto;white-space:nowrap}
+  .topic{padding:20px 16px 40px}
+  .two{grid-template-columns:1fr}
+  .tabs{margin:0 0 0 auto}
+  .brand span.txt{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="topbar">
+  <div class="brand"><span class="mark"><i></i><i></i><i></i><i></i></span><span class="txt">Grid Lab</span></div>
+  <nav class="tabs" aria-label="Sections">
+    <button data-view="learn" class="on">Learn</button>
+    <button data-view="playground">Playground</button>
+  </nav>
+  <button id="themeBtn" class="theme" aria-label="Toggle colour theme">☾ Dark</button>
+</header>
+
+<!-- ============ LEARN ============ -->
+<section id="learn" class="view on">
+  <aside class="side">
+    <nav id="topicNav" aria-label="Topics"></nav>
+    <label class="chk"><input type="checkbox" id="learnLines" checked> Show grid lines &amp; numbers</label>
+  </aside>
+  <main id="topicView"></main>
+</section>
+
+<!-- ============ PLAYGROUND ============ -->
+<section id="playground" class="view">
+  <aside class="controls">
+    <h3><i class="dot p"></i> Container</h3>
+    <div class="row"><label class="lbl">display</label><div class="seg" id="segDisplay"></div></div>
+    <div class="row"><label class="lbl">grid-template-columns</label><input id="cCols" class="num" type="text"><div class="seg chips" id="colChips"></div></div>
+    <div class="row"><label class="lbl">grid-template-rows</label><input id="cRows" class="num" type="text"><div class="seg chips" id="rowChips"></div></div>
+    <div class="row"><label class="lbl">grid-template-areas</label><textarea id="cAreas" class="num" rows="3" placeholder="one row per line, e.g.&#10;header header&#10;sidebar main"></textarea><div class="seg chips" id="areaChips"></div></div>
+    <details class="help"><summary>How areas work</summary>Type one grid row per line, with one name per column (use <code>.</code> for an empty cell). Then give items a matching <code>grid-area</code> name. Every row must have the same number of names or the browser ignores the whole template.</details>
+    <div class="grid2">
+      <div><label class="lbl">row-gap <span id="rgVal"></span></label><input type="range" id="rg" min="0" max="48" step="2"></div>
+      <div><label class="lbl">column-gap <span id="cgVal"></span></label><input type="range" id="cg" min="0" max="48" step="2"></div>
+    </div>
+    <div class="row"><label class="lbl">grid-auto-flow</label><div class="seg" id="segFlow"></div></div>
+    <div class="row"><label class="lbl">grid-auto-rows</label><input id="cAutoRows" class="num" type="text"><div class="seg chips" id="autoRowChips"></div></div>
+    <div class="row"><label class="lbl">justify-items</label><div class="seg" id="segJI"></div></div>
+    <div class="row"><label class="lbl">align-items</label><div class="seg" id="segAI"></div></div>
+    <div class="row"><label class="lbl">justify-content</label><div class="seg" id="segJC"></div></div>
+    <div class="row"><label class="lbl">align-content</label><div class="seg" id="segAC"></div></div>
+    <div class="grid2">
+      <div><label class="lbl">height <span id="hgtVal"></span></label><input type="range" id="hgt" min="0" max="600" step="10"></div>
+      <div><label class="lbl">width <span id="widVal"></span></label><input type="range" id="wid" min="30" max="100" step="5"></div>
+    </div>
+
+    <hr class="sep">
+    <h3><i class="dot o"></i> Items <span id="countLbl" class="muted"></span></h3>
+    <div class="row btns"><button id="addItem" class="btn sm">+ Add item</button></div>
+    <p id="itemEmpty" class="hint">Click an item in the preview to edit it.</p>
+    <div id="itemForm" hidden>
+      <h4 id="itemTitle"></h4>
+      <div class="row"><label class="lbl">label</label><input id="iLabel" class="num" type="text"></div>
+      <div class="row"><label class="lbl">grid-column</label><input id="iCol" class="num" type="text" placeholder="auto"><div class="seg chips orange" id="colItemChips"></div></div>
+      <div class="row"><label class="lbl">grid-row</label><input id="iRow" class="num" type="text" placeholder="auto"><div class="seg chips orange" id="rowItemChips"></div></div>
+      <div class="row"><label class="lbl">grid-area <span class="muted">(name, overrides column/row)</span></label><input id="iArea" class="num" type="text" placeholder="none"></div>
+      <div class="row"><label class="lbl">justify-self</label><div class="seg orange" id="segJS"></div></div>
+      <div class="row"><label class="lbl">align-self</label><div class="seg orange" id="segAS"></div></div>
+      <div class="row btns"><button id="dupItem" class="btn ghost sm">Duplicate</button><button id="rmItem" class="btn ghost sm danger">Remove</button></div>
+    </div>
+  </aside>
+
+  <main class="pgmain">
+    <div class="pgbar">
+      <span class="hint">Click an item to select it. The CSS below updates as you go.</span>
+      <div class="btns">
+        <button id="linesBtn" class="btn ghost sm on">Hide lines</button>
+        <button id="resetBtn" class="btn ghost sm">Reset</button>
+        <button id="copyBtn" class="btn sm">Copy CSS</button>
+      </div>
+    </div>
+    <div class="stage pg"><div id="pgBox" class="gc"></div></div>
+    <div class="two">
+      <pre id="pgCode" class="code"></pre>
+      <div class="card ch">
+        <h3>Challenges</h3>
+        <select id="chSel"><option value="">Pick a challenge…</option></select>
+        <p id="chDesc" class="hint">Pick one to start from a fresh grid. It's marked solved the moment your settings match.</p>
+        <div id="chStatus"></div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $ = (s, r=document) => r.querySelector(s);
+const el = (tag, cls, text) => { const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; };
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ---------- theme ---------- */
+const root=document.documentElement;
+function setTheme(t){ root.setAttribute('data-theme',t); $('#themeBtn').textContent = t==='dark' ? '☀ Light' : '☾ Dark'; }
+setTheme(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+$('#themeBtn').addEventListener('click', ()=> setTheme(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
+function setHH(){ root.style.setProperty('--hh', $('#topbar').offsetHeight+'px'); }
+window.addEventListener('resize', setHH);
+
+/* ---------- views ---------- */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id===name));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.view===name));
+  window.scrollTo(0,0);
+  redrawAllLines();
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click', ()=>showView(b.dataset.view)));
+
+/* ---------- state ---------- */
+const CDEF={display:'grid',cols:'repeat(3, 1fr)',rows:'none',areas:'',rowGap:12,colGap:12,autoFlow:'row',autoRows:'auto',justifyItems:'stretch',alignItems:'stretch',justifyContent:'stretch',alignContent:'stretch',height:null,width:null};
+const IDEF={label:'',col:'auto',row:'auto',area:'',justifySelf:'auto',alignSelf:'auto'};
+function mkState(c, items){
+  const arr = Array.isArray(items) ? items : Array.from({length:items}, ()=>({}));
+  return { container:Object.assign({},CDEF,c||{}), items: arr.map((it,i)=>Object.assign({},IDEF,{label:String(i+1)},it)) };
+}
+const areasToCss = a => a.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>'"'+l+'"');
+
+/* ---------- grid-line overlay ---------- */
+const parsePx = s => s.split(' ').map(parseFloat).filter(n=>isFinite(n));
+function drawLines(box){
+  const ov=box.querySelector(':scope > .glines'); if(!ov) return; ov.innerHTML='';
+  if(!box.isConnected) return;
+  const cs=getComputedStyle(box); if(!/grid/.test(cs.display)) return;
+  const cols=parsePx(cs.gridTemplateColumns||''), rows=parsePx(cs.gridTemplateRows||'');
+  if(!cols.length||!rows.length) return;
+  const pl=parseFloat(cs.paddingLeft)||0, pt=parseFloat(cs.paddingTop)||0, cg=parseFloat(cs.columnGap)||0, rg=parseFloat(cs.rowGap)||0;
+  const pos=(tracks,start,gap)=>{ const out=[start]; let acc=start; tracks.forEach((w,i)=>{ acc+=w; out.push(i<tracks.length-1 ? acc+gap/2 : acc); acc+=gap; }); return out; };
+  const xs=pos(cols,pl,cg), ys=pos(rows,pt,rg);
+  const frag=document.createDocumentFragment();
+  xs.forEach((x,i)=>{ const l=el('div','gl v'); l.style.left=x+'px'; frag.appendChild(l); const n=el('span','gn c',String(i+1)); n.style.left=x+'px'; frag.appendChild(n); });
+  ys.forEach((y,i)=>{ const l=el('div','gl h'); l.style.top=y+'px'; frag.appendChild(l); const n=el('span','gn r',String(i+1)); n.style.top=y+'px'; frag.appendChild(n); });
+  ov.appendChild(frag);
+}
+function redrawAllLines(){ document.querySelectorAll('.gc').forEach(b=>{ if(b.querySelector(':scope > .glines')) drawLines(b); }); }
+const ro = ('ResizeObserver' in window) ? new ResizeObserver(entries=>entries.forEach(e=>drawLines(e.target))) : null;
+window.addEventListener('resize', redrawAllLines);
+
+/* ---------- rendering ---------- */
+function renderGrid(box, state, o){
+  o=o||{}; const c=state.container;
+  box.removeAttribute('style');
+  box.style.display=c.display;
+  box.style.gridTemplateColumns=c.cols;
+  box.style.gridTemplateRows=c.rows;
+  if(c.areas.trim()) box.style.gridTemplateAreas=areasToCss(c.areas).join(' ');
+  box.style.rowGap=c.rowGap+'px'; box.style.columnGap=c.colGap+'px';
+  box.style.gridAutoFlow=c.autoFlow; box.style.gridAutoRows=c.autoRows;
+  box.style.justifyItems=c.justifyItems; box.style.alignItems=c.alignItems;
+  box.style.justifyContent=c.justifyContent; box.style.alignContent=c.alignContent;
+  box.style.height=c.height?c.height+'px':''; box.style.width=c.width?c.width+'%':'';
+  box.innerHTML='';
+  state.items.forEach((it,i)=>{
+    const d=el('div','gi'+(i===o.selected?' selected':'')+(i===o.target?' target':''), it.label);
+    if(it.area.trim()) d.style.gridArea=it.area.trim(); else { d.style.gridColumn=it.col; d.style.gridRow=it.row; }
+    d.style.justifySelf=it.justifySelf; d.style.alignSelf=it.alignSelf;
+    if(o.onSelect){
+      d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label','Item '+(i+1)+(i===o.selected?' (selected)':''));
+      d.addEventListener('click', ()=>o.onSelect(i));
+      d.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); o.onSelect(i); } });
+    }
+    box.appendChild(d);
+  });
+  if(o.lines){ box.appendChild(el('div','glines')); if(ro) ro.observe(box); requestAnimationFrame(()=>drawLines(box)); }
+  else if(ro) ro.unobserve(box);
+}
+function cssBlock(sel, decls){
+  let h='<span class="c-sel">'+esc(sel)+'</span> {\n';
+  decls.forEach(d=>{ h+='  <span class="c-prop">'+esc(d[0])+'</span>:'+(String(d[1]).charAt(0)==='\n'?'':' ')+'<span class="c-val">'+esc(d[1])+'</span>;'+(d[2]?' <span class="c-cm">/* '+esc(d[2])+' */</span>':'')+'\n'; });
+  return h+'}';
+}
+const gapCss = c => c.rowGap===c.colGap ? c.rowGap+'px' : c.rowGap+'px '+c.colGap+'px';
+
+/* ---------- LEARN content ---------- */
+const HOLY={areas:'header header header\nnav main aside\nfooter footer footer',cols:'160px 1fr 160px',rows:'auto 1fr auto'};
+const HOLY_ITEMS=[{label:'Header',area:'header'},{label:'Nav',area:'nav'},{label:'Main',area:'main'},{label:'Aside',area:'aside'},{label:'Footer',area:'footer'}];
+const AREA_PRESETS=[
+ {name:'Holy grail',areas:HOLY.areas,cols:HOLY.cols,rows:HOLY.rows},
+ {name:'Sidebar',areas:'nav header header\nnav main aside\nnav footer footer',cols:'160px 1fr 160px',rows:'auto 1fr auto'},
+ {name:'Stacked (mobile)',areas:'header\nnav\nmain\naside\nfooter',cols:'1fr',rows:'none'},
+ {name:'With empty cells',areas:'header header .\nnav main aside\n. footer footer',cols:'1fr 1fr 1fr',rows:'auto 1fr auto'}
+];
+const TOPICS=[
+ {id:'display',group:'Basics',title:'The grid container and its items',prop:'display',key:'display',values:['block','grid','inline-grid'],
+  intro:'Grid starts with <code>display: grid</code> on a parent. That parent becomes the <strong>grid container</strong> (purple) and every direct child becomes a <strong>grid item</strong> (orange). Unlike flexbox, grid lays things out in two dimensions at once: you define columns <em>and</em> rows, and items snap into the cells. Switch the values to see the difference.',
+  gotcha:'Only direct children become grid items. <code>inline-grid</code> is the same thing but the container sits inline and shrinks to fit its tracks, like a <code>span</code>.',
+  state:mkState({cols:'repeat(3, 1fr)'},6)},
+ {id:'vocab',group:'Basics',title:'Tracks, lines, cells and areas',prop:'grid-template-columns',key:'cols',forceLines:true,values:['repeat(2, 1fr)','repeat(3, 1fr)','repeat(4, 1fr)'],
+  intro:'Four words you need. A <strong>track</strong> is a column or a row. <strong>Lines</strong> are the numbered edges between tracks — a grid with 3 columns has 4 column lines, numbered from 1, and you can also count backwards from <code>-1</code> at the end. A <strong>cell</strong> is the intersection of one column and one row, and an <strong>area</strong> is any rectangle of cells. Items are placed by line numbers, spans, or area names. The overlay shows the line numbers.',
+  gotcha:'Line numbers are the key to placement. When you write <code>grid-column: 2 / 4</code> you\'re saying "start at column line 2, end at column line 4" — which covers two tracks, not two lines.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, 80px)'},6)},
+ {id:'cols',group:'Container',title:'grid-template-columns',prop:'grid-template-columns',key:'cols',values:['1fr 1fr 1fr','200px 1fr','1fr 2fr 1fr','repeat(4, 1fr)','100px auto 100px'],
+  intro:'Defines the column tracks: how many there are and how wide. Each value is one column. Mix fixed lengths (<code>200px</code>), flexible fractions (<code>1fr</code>) and <code>auto</code> freely; <code>repeat()</code> saves typing. Items flow into the columns automatically.',
+  gotcha:'<code>fr</code> shares the space left over <em>after</em> fixed tracks and gaps are taken out, so <code>200px 1fr</code> means "200px, then everything else". <code>auto</code> tracks size to their content but also stretch to fill spare space when there are no <code>fr</code> tracks.',
+  state:mkState({},6)},
+ {id:'rows',group:'Container',title:'grid-template-rows',prop:'grid-template-rows',key:'rows',values:['none','120px 60px','repeat(2, 1fr)','1fr 2fr','auto 1fr auto'],
+  intro:'Defines the row tracks, the same way columns work. Most of the time you leave rows alone (<code>none</code>) and let the browser create them as items need them — those are <em>implicit</em> rows. Set them explicitly when you need fixed heights or want rows to share the container\'s height.',
+  gotcha:'<code>1fr</code> rows only have something to share if the container has a height. Rows you define but don\'t fill still take up space — notice the third empty row with <code>auto 1fr auto</code>.',
+  state:mkState({cols:'repeat(3, 1fr)',height:260},6)},
+ {id:'sizing',group:'Container',title:'fr, minmax(), repeat(), auto-fill & auto-fit',prop:'grid-template-columns',key:'cols',values:['repeat(3, 1fr)','repeat(3, minmax(120px, 1fr))','1fr minmax(150px, 300px) 1fr','repeat(auto-fill, minmax(120px, 1fr))','repeat(auto-fit, minmax(120px, 1fr))'],
+  intro:'The track-sizing toolkit. <code>fr</code> is a share of free space. <code>minmax(min, max)</code> lets a track flex between two limits. <code>repeat(n, …)</code> repeats a pattern. And <code>repeat(auto-fill, minmax(120px, 1fr))</code> is the one-liner for responsive grids: "as many 120px-or-wider columns as fit, stretched to fill the row". Resize the window while trying the last two.',
+  gotcha:'<code>auto-fill</code> keeps empty tracks when there aren\'t enough items (watch the lines); <code>auto-fit</code> collapses the empty ones so the items stretch. With enough items to fill the row they look identical.',
+  state:mkState({},5)},
+ {id:'gap',group:'Container',title:'gap',prop:'gap',key:'gap',values:[[0,0],[8,8],[16,16],[8,32]],
+  fmt:v=> v[0]===v[1] ? v[0]+'px' : v[0]+'px '+v[1]+'px',
+  get:st=>[st.container.rowGap,st.container.colGap], set:(st,v)=>{ st.container.rowGap=v[0]; st.container.colGap=v[1]; },
+  intro:'Space between tracks — between rows and between columns — without margins. <code>gap</code> is shorthand for <code>row-gap</code> then <code>column-gap</code>; one value sets both. Gaps are part of the grid, so they\'re subtracted before <code>fr</code> tracks are sized.',
+  gotcha:'<code>gap</code> never adds space at the outer edges; pad the container for that. (The older <code>grid-gap</code> spelling still works but is just an alias.)',
+  state:mkState({cols:'repeat(3, 1fr)'},6)},
+ {id:'areas',group:'Container',title:'grid-template-areas',prop:'grid-template-areas',key:'areas',values:AREA_PRESETS.map(p=>p.name),
+  get:st=>st.container._preset, set:(st,v)=>{ const p=AREA_PRESETS.find(x=>x.name===v); st.container._preset=v; st.container.areas=p.areas; st.container.cols=p.cols; st.container.rows=p.rows; },
+  decls:st=>[['grid-template-columns',st.container.cols],['grid-template-rows',st.container.rows],['grid-template-areas','\n    '+areasToCss(st.container.areas).join('\n    ')]],
+  intro:'Draw your layout as ASCII art. Each quoted string is one row; each name is one column; repeating a name makes an item span. Items then opt in with <code>grid-area: name</code>. The five items here are already named <code>header</code>, <code>nav</code>, <code>main</code>, <code>aside</code> and <code>footer</code> — only the template changes, which is exactly how a responsive layout swaps shape in a media query.',
+  gotcha:'Every row must have the same number of cells or the whole template is ignored. Use <code>.</code> for an empty cell. Named areas must be rectangles — an L-shape is invalid.',
+  state:mkState({_preset:'Holy grail',areas:HOLY.areas,cols:HOLY.cols,rows:HOLY.rows,height:280},HOLY_ITEMS)},
+ {id:'flow',group:'Container',title:'grid-auto-flow',prop:'grid-auto-flow',key:'autoFlow',values:['row','column','row dense','column dense'],
+  intro:'Controls how items you <em>didn\'t</em> place explicitly get auto-placed. <code>row</code> (default) fills each row left to right before starting the next; <code>column</code> fills top to bottom. Adding <code>dense</code> lets later items backfill holes left by spanning items. Here items 1 and 2 each span two columns, which leaves gaps.',
+  gotcha:'<code>dense</code> changes the visual order to plug holes, so the layout may no longer match reading order — great for galleries, risky for content that needs to be read in sequence.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(3, 70px)'},[{col:'span 2'},{col:'span 2'},{},{},{},{}])},
+ {id:'autorows',group:'Container',title:'grid-auto-rows (the implicit grid)',prop:'grid-auto-rows',key:'autoRows',values:['auto','60px','120px','minmax(80px, auto)'],
+  intro:'When items overflow the rows you defined (or you defined none), the browser creates <em>implicit</em> rows. <code>grid-auto-rows</code> sizes them; <code>grid-auto-columns</code> does the same for implicit columns. This grid defines 3 columns and no rows, so every row is implicit.',
+  gotcha:'<code>minmax(80px, auto)</code> is the usual choice: a sensible minimum that still grows for tall content. A fixed <code>60px</code> will clip or overflow when content is taller.',
+  state:mkState({cols:'repeat(3, 1fr)'},7)},
+ {id:'justify-items',group:'Container',title:'justify-items',prop:'justify-items',key:'justifyItems',values:['stretch','start','end','center'],
+  intro:'Aligns every item <strong>horizontally inside its own cell</strong> (along the inline axis). <code>stretch</code> (default) fills the cell; the others shrink the item to its content and place it.',
+  gotcha:'<code>place-items: center</code> sets both <code>justify-items</code> and <code>align-items</code> — the famous two-line way to centre anything. In grid, "justify" is always horizontal and "align" is always vertical; they don\'t flip like flexbox axes.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, 90px)'},6)},
+ {id:'align-items',group:'Container',title:'align-items',prop:'align-items',key:'alignItems',values:['stretch','start','end','center'],
+  intro:'Aligns every item <strong>vertically inside its own cell</strong> (along the block axis). Same values as <code>justify-items</code>. Rows here are 90px tall so there\'s room to move.',
+  gotcha:'If the row is only as tall as its content (auto rows), there\'s no spare space and nothing visibly moves. Give rows a size first.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, 90px)'},6)},
+ {id:'justify-content',group:'Container',title:'justify-content',prop:'justify-content',key:'justifyContent',values:['stretch','start','end','center','space-between','space-around','space-evenly'],
+  intro:'Aligns the <strong>whole grid</strong> horizontally inside the container when the tracks are narrower than the space available. Here the columns are <code>auto</code> (content-sized) so there\'s room left over to distribute.',
+  gotcha:'Only matters when tracks don\'t already fill the container, so with <code>1fr</code> columns you\'ll see no effect. <code>stretch</code> (the default behaviour) only stretches <code>auto</code> tracks. The <code>space-*</code> values effectively add extra gap between tracks.',
+  state:mkState({cols:'repeat(3, auto)',rows:'repeat(2, 60px)',height:220},6)},
+ {id:'align-content',group:'Container',title:'align-content',prop:'align-content',key:'alignContent',values:['stretch','start','end','center','space-between','space-around','space-evenly'],
+  intro:'Aligns the <strong>whole grid</strong> vertically inside the container when the rows are shorter than its height. This container is 260px tall with two content-sized rows.',
+  gotcha:'<code>place-content</code> is the shorthand for <code>align-content</code> + <code>justify-content</code>. Like its sibling, it does nothing unless there is free space in that direction.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, auto)',height:260},6)},
+ {id:'grid-column',group:'Items',target:'item',targetIndex:0,title:'grid-column',prop:'grid-column',key:'col',values:['auto','1 / 3','span 2','2 / -1','1 / -1'],
+  intro:'Places an item by <strong>column lines</strong>: <code>start / end</code>. Shorthand for <code>grid-column-start</code> and <code>grid-column-end</code>. <code>span 2</code> means "two tracks wide from wherever I land"; negative numbers count from the last line, so <code>1 / -1</code> is always the full width. Other items flow around it.',
+  gotcha:'<code>2 / 4</code> covers two tracks (it\'s lines, not tracks). An item placed explicitly is taken out of auto-placement, which is why the others shuffle.',
+  state:mkState({cols:'repeat(3, 1fr)'},6)},
+ {id:'grid-row',group:'Items',target:'item',targetIndex:0,title:'grid-row',prop:'grid-row',key:'row',values:['auto','1 / 3','span 2','2 / 4','1 / -1'],
+  intro:'The same idea for <strong>row lines</strong>: <code>start / end</code>, spans and negatives. Combine <code>grid-column</code> and <code>grid-row</code> to put an item anywhere — that\'s how dashboards and magazine layouts are built. Three 70px rows are defined here.',
+  gotcha:'<code>-1</code> refers to the last line of the <em>explicit</em> grid. If the browser has to add implicit rows, <code>-1</code> still points at the last explicit row line, not the very bottom.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(3, 70px)'},6)},
+ {id:'grid-area',group:'Items',target:'item',targetIndex:5,title:'grid-area',prop:'grid-area',key:'area',values:['auto','header','main','footer','2 / 1 / 3 / 3'],
+  fmt:v=>v===''?'auto':v, get:st=>st.items[5].area===''?'auto':st.items[5].area, set:(st,v)=>{ st.items[5].area = v==='auto' ? '' : v; },
+  intro:'Two jobs in one property. Given a <strong>name</strong>, it drops the item into that named area from <code>grid-template-areas</code>. Given four numbers — <code>row-start / column-start / row-end / column-end</code> — it\'s a shorthand for <code>grid-row</code> + <code>grid-column</code>. Try it on the highlighted "Me" item in this holy-grail layout.',
+  gotcha:'Two items in the same area simply overlap — later items paint on top (control that with <code>z-index</code>, which works on grid items). Auto-placed items never go into named areas; they take the next free cell, even if that means creating a new row.',
+  state:mkState({areas:HOLY.areas,cols:HOLY.cols,rows:HOLY.rows,height:300},HOLY_ITEMS.concat([{label:'Me'}]))},
+ {id:'justify-self',group:'Items',target:'item',targetIndex:1,title:'justify-self',prop:'justify-self',key:'justifySelf',values:['auto','start','end','center','stretch'],
+  intro:'Overrides <code>justify-items</code> for one item: its horizontal position within its cell. <code>auto</code> (default) inherits the container\'s setting.',
+  gotcha:'<code>place-self: center</code> sets both <code>justify-self</code> and <code>align-self</code> at once.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, 90px)'},6)},
+ {id:'align-self',group:'Items',target:'item',targetIndex:1,title:'align-self',prop:'align-self',key:'alignSelf',values:['auto','start','end','center','stretch'],
+  intro:'Overrides <code>align-items</code> for one item: its vertical position within its cell.',
+  gotcha:'Unlike flexbox, grid items can be aligned in both directions independently without any tricks — that\'s what makes <code>place-self</code> so handy.',
+  state:mkState({cols:'repeat(3, 1fr)',rows:'repeat(2, 90px)'},6)},
+ {id:'layouts',group:'Recipes',title:'Common layouts',kind:'layouts',
+  intro:'The grids you\'ll reach for again and again. Each is only a few of the properties above. Open any of them in the playground and pull it apart.'}
+];
+const LAYOUTS=[
+ {title:'Holy grail (areas)',desc:'Header, nav, main, aside and footer, drawn with grid-template-areas.',state:mkState({areas:HOLY.areas,cols:HOLY.cols,rows:HOLY.rows,height:240},HOLY_ITEMS)},
+ {title:'Responsive cards',desc:'As many 140px-or-wider cards as fit per row, no media queries needed.',state:mkState({cols:'repeat(auto-fill, minmax(140px, 1fr))'},Array.from({length:7},(_,i)=>({label:'Card '+(i+1)})))},
+ {title:'Dashboard',desc:'One big tile spanning 2×2, the rest auto-placed around it.',state:mkState({cols:'repeat(4, 1fr)',autoRows:'70px'},[{label:'Big',col:'1 / 3',row:'1 / 3'},{label:'A'},{label:'B'},{label:'C'},{label:'D'},{label:'E'},{label:'F'}])},
+ {title:'Sidebar + content',desc:'A fixed 180px sidebar spanning both rows, a header, and content that fills the rest.',state:mkState({cols:'180px 1fr',rows:'auto 1fr',height:240},[{label:'Sidebar',row:'1 / 3'},{label:'Header'},{label:'Content'}])},
+ {title:'Form rows',desc:'Labels in an auto-sized column, fields taking the rest, button under the fields.',state:mkState({cols:'auto 1fr',alignItems:'center'},[{label:'Name'},{label:'Text field'},{label:'Email'},{label:'Text field'},{label:'Submit',col:'2'}])},
+ {title:'Centered box',desc:'The modern way to centre anything: place-items: center.',state:mkState({cols:'1fr',justifyItems:'center',alignItems:'center',height:200},[{label:'Card'}])}
+];
+
+const learnState={}; let learnLines=true; let currentTopic=TOPICS[0].id;
+
+function buildNav(){
+  const nav=$('#topicNav'); nav.innerHTML=''; let g=null;
+  TOPICS.forEach(t=>{
+    if(t.group!==g){ g=t.group; nav.appendChild(el('h4',null,g)); }
+    const b=el('button', t.kind==='layouts' ? 'recipe' : (t.target==='item' ? 'item-prop' : ''));
+    b.dataset.id=t.id; b.append(el('i'), document.createTextNode(t.title));
+    b.addEventListener('click', ()=>{ currentTopic=t.id; renderTopic(); });
+    nav.appendChild(b);
+  });
+}
+function renderTopic(){
+  document.querySelectorAll('#topicNav button').forEach(b=>b.classList.toggle('on', b.dataset.id===currentTopic));
+  const t=TOPICS.find(x=>x.id===currentTopic); const view=$('#topicView'); view.innerHTML='';
+  const wrap=el('div','topic');
+  const head=el('div','thead');
+  const pill=el('span','pill'+(t.target==='item'?' orange':''), t.kind==='layouts' ? 'Recipes' : (t.target==='item' ? 'Item property' : 'Container property'));
+  head.append(pill, el('h1',null,t.title)); wrap.appendChild(head);
+  const intro=el('p','intro'); intro.innerHTML=t.intro; wrap.appendChild(intro);
+  if(t.kind==='layouts'){ renderLayouts(wrap); view.appendChild(wrap); return; }
+
+  if(!learnState[t.id]) learnState[t.id]=clone(t.state);
+  const st=learnState[t.id];
+  const isItem = t.target==='item'; const target = isItem ? t.targetIndex : -1;
+  const stage=el('div','stage'); const box=el('div','gc'); stage.appendChild(box); wrap.appendChild(stage);
+  if(isItem){ const lg=el('div','legend'); const i=el('i'); i.style.background='var(--line)'; lg.append(i, document.createTextNode('the item being changed (.item-'+(target+1)+')')); wrap.appendChild(lg); }
+  const vals=el('div','vals'+(isItem?' orange':'')); wrap.appendChild(vals);
+  const pre=el('pre','code'); wrap.appendChild(pre);
+  const get=()=> t.get ? t.get(st) : (isItem ? st.items[target][t.key] : st.container[t.key]);
+  const set=v=>{ if(t.set) t.set(st,v); else if(isItem) st.items[target][t.key]=v; else st.container[t.key]=v; };
+  const fmt=v=> t.fmt ? t.fmt(v) : String(v);
+  const draw=()=>{
+    renderGrid(box, st, {target:target, lines: !!t.forceLines || learnLines});
+    vals.innerHTML='';
+    t.values.forEach(v=>{
+      const b=el('button', String(v)===String(get())?'on':'', fmt(v));
+      b.addEventListener('click', ()=>{ set(v); draw(); });
+      vals.appendChild(b);
+    });
+    let decls;
+    if(t.decls) decls=[['display','grid']].concat(t.decls(st));
+    else if(isItem) decls=[[t.prop, fmt(get())]];
+    else { decls=[]; if(t.key!=='display') decls.push(['display','grid']); if(t.key!=='cols' && t.key!=='display') decls.push(['grid-template-columns',st.container.cols]); if(st.container.rows!=='none' && t.key!=='rows' && t.key!=='cols' && t.key!=='display') decls.push(['grid-template-rows',st.container.rows]); decls.push([t.prop, fmt(get())]); }
+    pre.innerHTML=cssBlock(isItem ? '.item-'+(target+1) : '.container', decls);
+  };
+  draw();
+  if(t.gotcha){ const g=el('div','gotcha'); g.innerHTML='<strong>Gotcha.</strong> '+t.gotcha; wrap.appendChild(g); }
+  const act=el('div','actions'); const b=el('button','btn','Open this in the playground →');
+  b.addEventListener('click', ()=>loadPlayground(st, t.title)); act.appendChild(b); wrap.appendChild(act);
+  view.appendChild(wrap);
+  redrawAllLines();
+}
+function renderLayouts(wrap){
+  const grid=el('div','gallery');
+  LAYOUTS.forEach(L=>{
+    const card=el('div','card');
+    card.appendChild(el('h3',null,L.title)); card.appendChild(el('p',null,L.desc));
+    const stage=el('div','stage mini'); const box=el('div','gc'); renderGrid(box, L.state, {}); stage.appendChild(box); card.appendChild(stage);
+    const b=el('button','btn sm','Open in playground →'); b.addEventListener('click', ()=>loadPlayground(L.state, L.title)); card.appendChild(b);
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+}
+$('#learnLines').addEventListener('change', e=>{ learnLines=e.target.checked; renderTopic(); });
+
+/* ---------- PLAYGROUND ---------- */
+function expandTracks(str){
+  let s=(str||'').trim();
+  s=s.replace(/repeat\(\s*(\d+)\s*,\s*([^()]*(?:\([^()]*\)[^()]*)*)\)/g, (m,n,list)=>Array(+n).fill(list.trim()).join(' '));
+  return s.split(/\s+(?![^(]*\))/).filter(Boolean);
+}
+const squash = s => (s||'').replace(/\s+/g,'');
+const CHALLENGES=[
+ {title:'Three equal columns',desc:'Make exactly three columns of equal width.',check:s=>{ const t=expandTracks(s.container.cols); return t.length===3 && t.every(x=>x===t[0]); }},
+ {title:'Fixed sidebar',desc:'Two columns: a fixed pixel-width first column and a 1fr second column.',check:s=>{ const t=expandTracks(s.container.cols); return t.length===2 && /px$/.test(t[0]) && t[1]==='1fr'; }},
+ {title:'Responsive cards',desc:'Columns that add and remove themselves as the container resizes, using auto-fill or auto-fit with minmax().',check:s=>/auto-(fill|fit)/.test(s.container.cols) && /minmax\(/.test(s.container.cols)},
+ {title:'Span the top',desc:'Make one item stretch across every column of the grid.',check:s=>{ const n=expandTracks(s.container.cols).length; return s.items.some(i=>{ const c=squash(i.col); return !i.area.trim() && (c==='1/-1' || c==='span'+n || c==='1/'+(n+1)); }); }},
+ {title:'Two rows tall',desc:'Make one item span two rows.',check:s=>s.items.some(i=>{ const r=squash(i.row); return !i.area.trim() && /^(\d+\/\d+|span2)$/.test(r) && (r==='span2' || (+r.split('/')[1]-(+r.split('/')[0])===2)); })},
+ {title:'Name your areas',desc:'Define grid-template-areas and give every item (at least three) a matching grid-area name.',check:s=>!!s.container.areas.trim() && s.items.length>=3 && s.items.every(i=>!!i.area.trim())},
+ {title:'Fill the holes',desc:'Have at least one spanning item, then turn on dense packing so later items backfill the gaps.',check:s=>/dense/.test(s.container.autoFlow) && s.items.some(i=>/span/.test(i.col)||/span/.test(i.row))},
+ {title:'Dead centre',desc:'Centre every item inside its cell, both horizontally and vertically.',check:s=>s.container.justifyItems==='center' && s.container.alignItems==='center'},
+ {title:'Tall implicit rows',desc:'Make the auto-created rows at least 100px tall (a fixed value or a minmax minimum).',check:s=>{ const m=s.container.autoRows.match(/(\d+)px/); return !!m && +m[1]>=100; }},
+ {title:'Mind the gap',desc:'Use different, non-zero row and column gaps.',check:s=>s.container.rowGap!==s.container.colGap && s.container.rowGap>0 && s.container.colGap>0}
+];
+const SEG_DEFS=[
+ {id:'#segDisplay',key:'display',vals:['grid','inline-grid']},
+ {id:'#segFlow',key:'autoFlow',vals:['row','column','row dense','column dense']},
+ {id:'#segJI',key:'justifyItems',vals:['stretch','start','end','center']},
+ {id:'#segAI',key:'alignItems',vals:['stretch','start','end','center']},
+ {id:'#segJC',key:'justifyContent',vals:['stretch','start','end','center','space-between','space-around','space-evenly']},
+ {id:'#segAC',key:'alignContent',vals:['stretch','start','end','center','space-between','space-around','space-evenly']}
+];
+const ITEM_SEGS=[ {id:'#segJS',key:'justifySelf',vals:['auto','start','end','center','stretch']}, {id:'#segAS',key:'alignSelf',vals:['auto','start','end','center','stretch']} ];
+const COL_CHIPS=['repeat(3, 1fr)','1fr 1fr','200px 1fr','repeat(4, 1fr)','repeat(auto-fill, minmax(120px, 1fr))','repeat(auto-fit, minmax(120px, 1fr))'];
+const ROW_CHIPS=['none','repeat(2, 100px)','auto 1fr auto','repeat(3, 1fr)'];
+const AUTOROW_CHIPS=['auto','80px','minmax(60px, auto)'];
+const ICOL_CHIPS=['auto','span 2','1 / -1','2 / 4'];
+const IROW_CHIPS=['auto','span 2','1 / 3'];
+const freshPg=()=>mkState({},6);
+const challengeStart=()=>mkState({cols:'1fr 1fr'},6);
+
+let pg=freshPg(), sel=-1, pgLines=true, challenge=null;
+const segBtns=[], itemSegBtns=[];
+
+function chips(hostSel, list, onPick){ const host=$(hostSel); list.forEach(v=>{ const b=el('button','',v); b.addEventListener('click',()=>onPick(v)); host.appendChild(b); }); }
+function buildPlayground(){
+  SEG_DEFS.forEach(s=>{ const host=$(s.id); s.vals.forEach(v=>{ const b=el('button','',v); b.dataset.v=v; b.addEventListener('click',()=>{ pg.container[s.key]=v; syncAll(); }); host.appendChild(b); segBtns.push({key:s.key,btn:b}); }); });
+  ITEM_SEGS.forEach(s=>{ const host=$(s.id); s.vals.forEach(v=>{ const b=el('button','',v); b.dataset.v=v; b.addEventListener('click',()=>{ if(pg.items[sel]){ pg.items[sel][s.key]=v; syncAll(); } }); host.appendChild(b); itemSegBtns.push({key:s.key,btn:b}); }); });
+  chips('#colChips', COL_CHIPS, v=>{ pg.container.cols=v; syncAll(); });
+  chips('#rowChips', ROW_CHIPS, v=>{ pg.container.rows=v; syncAll(); });
+  chips('#autoRowChips', AUTOROW_CHIPS, v=>{ pg.container.autoRows=v; syncAll(); });
+  chips('#areaChips', ['Example: holy grail','Clear'], v=>{
+    if(v==='Clear'){ pg.container.areas=''; pg.items.forEach(i=>i.area=''); }
+    else { pg.container.areas=HOLY.areas; pg.container.cols=HOLY.cols; pg.container.rows=HOLY.rows; if(!pg.container.height) pg.container.height=260;
+      while(pg.items.length<5) pg.items.push(Object.assign({},IDEF,{label:String(pg.items.length+1)}));
+      pg.items.forEach((it,i)=>{ if(i<5){ it.area=HOLY_ITEMS[i].area; it.label=HOLY_ITEMS[i].label; } else it.area=''; }); }
+    blurActive(); syncAll();
+  });
+  chips('#colItemChips', ICOL_CHIPS, v=>{ if(pg.items[sel]){ pg.items[sel].col=v; syncAll(); } });
+  chips('#rowItemChips', IROW_CHIPS, v=>{ if(pg.items[sel]){ pg.items[sel].row=v; syncAll(); } });
+
+  $('#cCols').addEventListener('input', e=>{ pg.container.cols=e.target.value.trim()||'none'; syncAll(); });
+  $('#cRows').addEventListener('input', e=>{ pg.container.rows=e.target.value.trim()||'none'; syncAll(); });
+  $('#cAreas').addEventListener('input', e=>{ pg.container.areas=e.target.value; syncAll(); });
+  $('#cAutoRows').addEventListener('input', e=>{ pg.container.autoRows=e.target.value.trim()||'auto'; syncAll(); });
+  $('#rg').addEventListener('input', e=>{ pg.container.rowGap=+e.target.value; syncAll(); });
+  $('#cg').addEventListener('input', e=>{ pg.container.colGap=+e.target.value; syncAll(); });
+  $('#hgt').addEventListener('input', e=>{ const v=+e.target.value; pg.container.height=v>0?v:null; syncAll(); });
+  $('#wid').addEventListener('input', e=>{ const v=+e.target.value; pg.container.width=v>=100?null:v; syncAll(); });
+
+  const item=()=>pg.items[sel];
+  $('#iLabel').addEventListener('input', e=>{ if(item()){ item().label=e.target.value; syncAll(); } });
+  $('#iCol').addEventListener('input', e=>{ if(item()){ item().col=e.target.value.trim()||'auto'; syncAll(); } });
+  $('#iRow').addEventListener('input', e=>{ if(item()){ item().row=e.target.value.trim()||'auto'; syncAll(); } });
+  $('#iArea').addEventListener('input', e=>{ if(item()){ item().area=e.target.value.trim(); syncAll(); } });
+
+  $('#addItem').addEventListener('click', ()=>{ pg.items.push(Object.assign({},IDEF,{label:String(pg.items.length+1)})); sel=pg.items.length-1; blurActive(); syncAll(); });
+  $('#rmItem').addEventListener('click', ()=>{ if(sel<0) return; pg.items.splice(sel,1); sel=-1; blurActive(); syncAll(); });
+  $('#dupItem').addEventListener('click', ()=>{ if(sel<0) return; pg.items.splice(sel+1,0,clone(pg.items[sel])); sel=sel+1; blurActive(); syncAll(); });
+  $('#resetBtn').addEventListener('click', ()=>{ pg=freshPg(); sel=-1; blurActive(); syncAll(); toast('Playground reset'); });
+  $('#linesBtn').addEventListener('click', ()=>{ pgLines=!pgLines; $('#linesBtn').classList.toggle('on',pgLines); $('#linesBtn').textContent=pgLines?'Hide lines':'Show lines'; syncAll(); });
+  $('#copyBtn').addEventListener('click', copyCss);
+
+  const chSel=$('#chSel');
+  CHALLENGES.forEach((c,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=c.title; chSel.appendChild(o); });
+  chSel.addEventListener('change', e=>{ const v=e.target.value; challenge = v===''?null:+v; pg=challengeStart(); sel=-1; blurActive(); syncAll(); if(challenge!=null) toast('Challenge started — fresh grid'); });
+}
+function blurActive(){ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+function setVal(s,v){ const e=$(s); if(document.activeElement!==e) e.value=v; }
+
+function pgCss(){
+  const c=pg.container;
+  const cd=[['display',c.display],['grid-template-columns',c.cols]];
+  if(c.rows!=='none') cd.push(['grid-template-rows',c.rows]);
+  if(c.areas.trim()) cd.push(['grid-template-areas','\n    '+areasToCss(c.areas).join('\n    ')]);
+  cd.push(['gap',gapCss(c)]);
+  if(c.autoFlow!=='row') cd.push(['grid-auto-flow',c.autoFlow]);
+  if(c.autoRows!=='auto') cd.push(['grid-auto-rows',c.autoRows]);
+  if(c.justifyItems!=='stretch') cd.push(['justify-items',c.justifyItems]);
+  if(c.alignItems!=='stretch') cd.push(['align-items',c.alignItems]);
+  if(c.justifyContent!=='stretch') cd.push(['justify-content',c.justifyContent]);
+  if(c.alignContent!=='stretch') cd.push(['align-content',c.alignContent]);
+  if(c.height) cd.push(['height',c.height+'px']);
+  if(c.width) cd.push(['width',c.width+'%']);
+  let out=cssBlock('.container',cd);
+  pg.items.forEach((it,i)=>{
+    const d=[];
+    if(it.area.trim()) d.push(['grid-area',it.area.trim()]);
+    else { if(it.col!=='auto') d.push(['grid-column',it.col]); if(it.row!=='auto') d.push(['grid-row',it.row]); }
+    if(it.justifySelf!=='auto') d.push(['justify-self',it.justifySelf]);
+    if(it.alignSelf!=='auto') d.push(['align-self',it.alignSelf]);
+    if(d.length) out+='\n\n'+cssBlock('.item-'+(i+1),d);
+  });
+  out+='\n\n<span class="c-cm">/* '+pg.items.length+' item'+(pg.items.length===1?'':'s')+' inside .container; items with all defaults are omitted */</span>';
+  return out;
+}
+function syncAll(){
+  renderGrid($('#pgBox'), pg, {selected:sel, lines:pgLines, onSelect:i=>{ sel=(sel===i?-1:i); blurActive(); syncAll(); }});
+  const c=pg.container;
+  segBtns.forEach(s=>s.btn.classList.toggle('on', s.btn.dataset.v===String(c[s.key])));
+  setVal('#cCols',c.cols); setVal('#cRows',c.rows); setVal('#cAreas',c.areas); setVal('#cAutoRows',c.autoRows);
+  setVal('#rg',c.rowGap); $('#rgVal').textContent=c.rowGap+'px';
+  setVal('#cg',c.colGap); $('#cgVal').textContent=c.colGap+'px';
+  setVal('#hgt',c.height||0); $('#hgtVal').textContent=c.height?c.height+'px':'auto';
+  setVal('#wid',c.width||100); $('#widVal').textContent=(c.width||100)+'%';
+  $('#countLbl').textContent='· '+pg.items.length+' item'+(pg.items.length===1?'':'s');
+  const it=pg.items[sel];
+  $('#itemEmpty').hidden=!!it; $('#itemForm').hidden=!it;
+  if(it){
+    $('#itemTitle').textContent='Item '+(sel+1)+' (.item-'+(sel+1)+')';
+    setVal('#iLabel',it.label); setVal('#iCol',it.col==='auto'?'':it.col); setVal('#iRow',it.row==='auto'?'':it.row); setVal('#iArea',it.area);
+    itemSegBtns.forEach(s=>s.btn.classList.toggle('on', s.btn.dataset.v===it[s.key]));
+  }
+  $('#pgCode').innerHTML=pgCss();
+  const st=$('#chStatus'), desc=$('#chDesc');
+  if(challenge==null){ desc.textContent='Pick one to start from a fresh grid. It\'s marked solved the moment your settings match.'; st.textContent=''; st.className=''; }
+  else { const ch=CHALLENGES[challenge]; desc.textContent=ch.desc; const ok=ch.check(pg); st.textContent=ok?'✓ Solved — nicely done.':'Not solved yet — keep going.'; st.className=ok?'ok':'no'; }
+}
+function loadPlayground(state,name){
+  pg=clone(state); delete pg.container._preset; sel=-1; challenge=null; $('#chSel').value='';
+  showView('playground'); syncAll(); toast('Loaded "'+name+'" into the playground');
+}
+async function copyCss(){
+  const txt=$('#pgCode').textContent;
+  try{ await navigator.clipboard.writeText(txt); toast('CSS copied to clipboard'); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    ta.remove(); toast(ok?'CSS copied to clipboard':'Copy failed — select the code and copy it manually');
+  }
+}
+let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------- init ---------- */
+setHH(); buildNav(); renderTopic(); buildPlayground(); syncAll(); showView('learn');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>React Internals — Part 2 Reading Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --scale:1;
+    --paper:#11141C;
+    --card:#1A1F2C;
+    --ink:#E9EDF5;
+    --ink-2:#96A1B7;
+    --rule:#2D3546;
+    --accent:#9B8CFF;
+    --live:#5FD1A6;
+    --dated:#E3AC4A;
+    --old:#F0817B;
+    --display:"Space Grotesk",system-ui,sans-serif;
+    --body:"Source Serif 4",Georgia,serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    --spine:24px;
+  }
+
+  *{box-sizing:border-box}
+
+  html{
+    font-size:calc(16px * var(--scale));
+    -webkit-text-size-adjust:100%;
+    color-scheme:dark;
+  }
+
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:1.2rem;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:var(--accent)}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+
+  /* ---------- header ---------- */
+
+  .masthead{padding:72px 0 40px;border-bottom:1px solid var(--rule)}
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:.76rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    margin:0 0 22px;
+  }
+
+  .eyebrow b{color:var(--accent);font-weight:700}
+
+  .masthead h1{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(2.3rem,5.6vw,3.7rem);
+    line-height:1.05;
+    letter-spacing:-.025em;
+    margin:0 0 24px;
+    max-width:16ch;
+  }
+
+  .masthead h1 em{font-style:normal;color:var(--accent)}
+
+  .standfirst{
+    max-width:60ch;
+    margin:0;
+    color:var(--ink-2);
+    font-size:1.14rem;
+  }
+
+  .standfirst strong{color:var(--ink);font-weight:600}
+
+  /* ---------- controls ---------- */
+
+  .controls{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:var(--paper);
+    padding:20px 0 18px;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:8px;
+  }
+
+  .filterset{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin-bottom:12px}
+
+  .filterset:last-of-type{margin-bottom:0}
+
+  .filterset > .setlabel{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    width:5.2rem;
+    flex:none;
+  }
+
+  .chip{
+    font-family:var(--mono);
+    font-size:.8rem;
+    letter-spacing:.03em;
+    padding:7px 12px;
+    border:1px solid var(--rule);
+    background:transparent;
+    color:var(--ink-2);
+    border-radius:2px;
+    cursor:pointer;
+    transition:background .14s ease,color .14s ease,border-color .14s ease;
+  }
+
+  .chip:hover{border-color:var(--ink-2);color:var(--ink)}
+
+  .chip[aria-pressed="true"]{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+
+  .chip .dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    margin-right:7px;
+    vertical-align:1px;
+    background:currentColor;
+  }
+
+  .chip.s-live .dot{background:var(--live)}
+  .chip.s-dated .dot{background:var(--dated)}
+  .chip.s-old .dot{background:var(--old)}
+
+  .tally{
+    font-family:var(--mono);
+    font-size:.78rem;
+    color:var(--ink-2);
+    padding-top:14px;
+    margin:0;
+    display:flex;
+    gap:16px;
+    align-items:baseline;
+    flex-wrap:wrap;
+  }
+
+  .reset{
+    background:none;border:none;padding:0;
+    font:inherit;color:var(--accent);
+    cursor:pointer;text-decoration:underline;
+    text-underline-offset:3px;
+  }
+
+  .reset[hidden]{display:none}
+
+  .textsize{margin-left:auto;display:flex;gap:6px;align-items:baseline}
+
+  .textsize span{color:var(--ink-2)}
+
+  .textsize button{
+    font-family:var(--display);
+    font-weight:500;
+    background:none;
+    border:1px solid var(--rule);
+    color:var(--ink-2);
+    border-radius:2px;
+    cursor:pointer;
+    line-height:1;
+    padding:5px 9px;
+    transition:background .14s ease,color .14s ease,border-color .14s ease;
+  }
+
+  .textsize button:hover{border-color:var(--ink-2);color:var(--ink)}
+
+  .textsize button[aria-pressed="true"]{
+    background:var(--ink);border-color:var(--ink);color:var(--paper);
+  }
+
+  .textsize button:nth-child(2){font-size:12px}
+  .textsize button:nth-child(3){font-size:15px}
+  .textsize button:nth-child(4){font-size:18px}
+
+  /* ---------- the spine ---------- */
+
+  .queue{
+    position:relative;
+    margin:0;
+    padding:32px 0 0 calc(var(--spine) + 22px);
+    list-style:none;
+  }
+
+  .queue::before{
+    content:"";
+    position:absolute;
+    left:var(--spine);
+    top:0;bottom:34px;
+    width:1px;
+    background:linear-gradient(180deg,transparent,var(--rule) 24px,var(--rule) calc(100% - 40px),transparent);
+  }
+
+  .node{position:relative;margin-bottom:14px}
+
+  .node::before{ /* pointer dot sitting on the spine */
+    content:"";
+    position:absolute;
+    left:-26.5px;
+    top:28px;
+    width:9px;height:9px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1px solid var(--ink-2);
+  }
+
+  .node[data-status="live"]::before{border-color:var(--live);background:var(--live)}
+  .node[data-status="dated"]::before{border-color:var(--dated);background:var(--dated)}
+  .node[data-status="old"]::before{border-color:var(--old);background:var(--old)}
+
+  .node[hidden]{display:none}
+
+  /* ---------- card ---------- */
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:3px;
+  }
+
+  .node[data-origin="added"] .card{
+    background:transparent;
+    border-style:dashed;
+  }
+
+  .head{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:none;
+    border:none;
+    font:inherit;
+    color:inherit;
+    padding:20px 22px;
+    cursor:pointer;
+  }
+
+  .meta{
+    font-family:var(--mono);
+    font-size:.75rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin:0 0 10px;
+  }
+
+  .meta .sec{color:var(--accent);font-weight:700}
+
+  .meta .src{
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:1px 6px;
+    letter-spacing:.08em;
+  }
+
+  .title{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:1.36rem;
+    line-height:1.26;
+    letter-spacing:-.012em;
+    margin:0 0 7px;
+  }
+
+  .byline{
+    font-family:var(--mono);
+    font-size:.8rem;
+    color:var(--ink-2);
+    margin:0 0 12px;
+  }
+
+  .when{margin:0;font-size:1.06rem;color:var(--ink-2)}
+
+  .when b{color:var(--ink);font-weight:600}
+
+  .expander{
+    display:grid;
+    grid-template-rows:0fr;
+    transition:grid-template-rows .28s cubic-bezier(.4,0,.2,1);
+  }
+
+  .node.open .expander{grid-template-rows:1fr}
+
+  .expander > div{overflow:hidden}
+
+  .body{
+    padding:18px 22px 22px;
+    border-top:1px solid var(--rule);
+    margin-top:4px;
+  }
+
+  .body h4{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    margin:0 0 12px;
+    font-weight:400;
+  }
+
+  .body ul{margin:0 0 4px;padding-left:1.1em}
+
+  .body li{margin-bottom:10px;line-height:1.6}
+
+  .body code{
+    font-family:var(--mono);
+    font-size:.86em;
+    background:var(--paper);
+    color:var(--ink);
+    padding:2px 5px;
+    border-radius:2px;
+  }
+
+  .flag{
+    margin-top:18px;
+    padding:14px 16px;
+    border-left:2px solid var(--dated);
+    background:rgba(227,172,74,.09);
+    font-size:1.02rem;
+  }
+
+  .node[data-status="old"] .flag{border-left-color:var(--old);background:rgba(240,129,123,.09)}
+  .node[data-status="live"] .flag{border-left-color:var(--live);background:rgba(95,209,166,.09)}
+
+  .flag b{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:5px;
+    color:var(--dated);
+  }
+
+  .node[data-status="old"] .flag b{color:var(--old)}
+  .node[data-status="live"] .flag b{color:var(--live)}
+
+  .go{
+    display:inline-block;
+    margin-top:18px;
+    font-family:var(--mono);
+    font-size:.8rem;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--accent);
+    text-decoration:none;
+    border-bottom:1px solid var(--accent);
+    padding-bottom:2px;
+  }
+
+  .go:hover{color:var(--ink);border-color:var(--ink)}
+
+  .caret{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:.75rem;
+    color:var(--ink-2);
+    letter-spacing:.08em;
+  }
+
+  .node.open .caret{color:var(--accent)}
+
+  .empty{
+    padding:40px 0;
+    color:var(--ink-2);
+    font-family:var(--mono);
+    font-size:.86rem;
+  }
+
+  .empty[hidden]{display:none}
+
+  .colophon{
+    border-top:1px solid var(--rule);
+    margin-top:40px;
+    padding-top:24px;
+    font-size:1.06rem;
+    color:var(--ink-2);
+    max-width:62ch;
+  }
+
+  .colophon h3{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:400;
+    margin:0 0 10px;
+  }
+
+  :is(button,a):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  @media (max-width:640px){
+    :root{--spine:10px}
+    .masthead{padding:48px 0 32px}
+    .queue{padding-left:30px}
+    .node::before{left:-24.5px}
+    .filterset > .setlabel{width:100%}
+    .textsize{margin-left:0;width:100%;padding-top:4px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Ultimate React Course · Part 2 · Sections <b>8 – 11</b> · audited 18 Aug 2026</p>
+    <h1>Reading order matters here, <em>same as it does for hooks.</em></h1>
+    <p class="standfirst">Thirty-two resources threaded in the order they pay off, from component design through Fiber, events, hook internals, effects, and refs. Each one is tagged with the course section it unlocks and with <strong>whether it still describes the React you are actually writing</strong> — three of Jonas's picks predate changes that landed in React 17 and 18.</p>
+  </header>
+
+  <div class="controls">
+    <div class="filterset">
+      <span class="setlabel">Section</span>
+      <button class="chip" data-filter="section" data-value="all" aria-pressed="true">All</button>
+      <button class="chip" data-filter="section" data-value="8" aria-pressed="false">08 · Composition</button>
+      <button class="chip" data-filter="section" data-value="9" aria-pressed="false">09 · Behind the scenes</button>
+      <button class="chip" data-filter="section" data-value="10" aria-pressed="false">10 · Effects</button>
+      <button class="chip" data-filter="section" data-value="11" aria-pressed="false">11 · Custom hooks &amp; refs</button>
+    </div>
+    <div class="filterset">
+      <span class="setlabel">Status</span>
+      <button class="chip" data-filter="status" data-value="all" aria-pressed="true">All</button>
+      <button class="chip s-live" data-filter="status" data-value="live" aria-pressed="false"><span class="dot"></span>Accurate today</button>
+      <button class="chip s-dated" data-filter="status" data-value="dated" aria-pressed="false"><span class="dot"></span>Mostly holds</button>
+      <button class="chip s-old" data-filter="status" data-value="old" aria-pressed="false"><span class="dot"></span>Read as history</button>
+    </div>
+    <div class="filterset">
+      <span class="setlabel">Source</span>
+      <button class="chip" data-filter="origin" data-value="all" aria-pressed="true">All</button>
+      <button class="chip" data-filter="origin" data-value="jonas" aria-pressed="false">Jonas's list</button>
+      <button class="chip" data-filter="origin" data-value="added" aria-pressed="false">Added</button>
+    </div>
+    <div class="tally">
+      <span id="tally">32 of 32 showing</span>
+      <button class="reset" id="reset" hidden>Clear filters</button>
+      <div class="textsize" role="group" aria-label="Text size">
+        <span>Text</span>
+        <button data-scale="1" aria-pressed="true">A</button>
+        <button data-scale="1.15" aria-pressed="false">A</button>
+        <button data-scale="1.32" aria-pressed="false">A</button>
+      </div>
+    </div>
+  </div>
+
+  <ol class="queue" id="queue"></ol>
+  <p class="empty" id="empty" hidden>No resources match that combination. Try clearing a filter.</p>
+
+  <div class="colophon">
+    <h3>How to use this</h3>
+    <p>Solid-bordered cards are Jonas's original sixteen. Dashed cards are additions — replacements for the outdated picks, plus coverage for sections 10 and 11, which his list barely touches. Nothing here is required reading. If you only open four things before finishing usePopcorn, make them the rendering-behavior guide, the call-order post, Build Your Own React, and the useEffect guide.</p>
+  </div>
+
+</div>
+
+<script>
+const DATA = [
+  {
+    t:"react-philosophies", a:"mithi · GitHub · rev. 2022", sec:[8], status:"live", origin:"jonas",
+    url:"https://github.com/mithi/react-philosophies",
+    when:"Skim <b>before</b> you restructure usePopcorn into components. It is a checklist, not an essay — read sections 1 and 2, skip 3–5 for now.",
+    k:[
+      "Remove redundant state and derive it instead. The triangle and points examples are the same lesson Jonas teaches with derived state, worked out in full.",
+      "Pass the banana, not the gorilla holding the banana and the entire jungle — prefer primitives as props over whole objects, which also makes <code>React.memo</code> actually work.",
+      "If you cannot describe a component in one sentence without saying \"and\", it is doing two jobs.",
+      "Duplication is far cheaper than the wrong abstraction. Do not generalise the second time you see a pattern.",
+      "Wrap context in a custom hook that throws when used outside its provider — one import instead of two, and a real error message."
+    ]
+  },
+  {
+    t:"Writing Resilient Components", a:"Dan Abramov · Mar 2019", sec:[8], status:"live", origin:"jonas",
+    url:"https://overreacted.io/writing-resilient-components/",
+    when:"Read once, properly, then re-read the four principles as a checklist whenever a component starts feeling fragile.",
+    k:[
+      "Do not copy props into state. You silently freeze the value and ignore every future update.",
+      "Always be ready to render. A component must not break because its parent re-rendered more or less often than you expected.",
+      "No component is a singleton — render your app twice side by side and click around. Anything that breaks was too coupled.",
+      "Keep local state isolated: ask \"if this were rendered twice, should this interaction show up in the other copy?\" If no, it is local state.",
+      "<code>useMemo</code> is the answer to expensive derived values, not derived state stored in <code>useState</code>."
+    ],
+    flag:{k:"live", label:"Note", txt:"The examples are class components with <code>componentWillReceiveProps</code>. The principles translate directly; the syntax does not. Read past it."}
+  },
+  {
+    t:"Don't Sync State. Derive It!", a:"Kent C. Dodds", sec:[8], status:"live", origin:"added",
+    url:"https://kentcdodds.com/blog/dont-sync-state-derive-it",
+    when:"The short version of the react-philosophies lesson above. Read it the moment you catch yourself writing a <code>useEffect</code> whose only job is to call <code>setSomething</code>.",
+    k:[
+      "Every extra piece of state is another thing that can fall out of sync.",
+      "If a value can be computed from existing state during render, compute it during render.",
+      "Effects that only mirror one state value into another are almost always a design smell."
+    ]
+  },
+
+  {
+    t:"A (Mostly) Complete Guide to React Rendering Behavior", a:"Mark Erikson · 2020, rev. Oct 2022", sec:[9], status:"dated", origin:"jonas",
+    url:"https://blog.isquaredsoftware.com/2020/05/blogged-answers-a-mostly-complete-guide-to-react-rendering-behavior/",
+    when:"The single most useful thing on this page for section 9. Long — read the first half now (through \"Render Behavior Edge Cases\"), save the Context and Redux halves for later.",
+    k:[
+      "Rendering is not the same as updating the DOM. A component can render with zero DOM changes, and that is normal, not a bug.",
+      "When a parent renders, React renders every child beneath it — unconditionally, whether props changed or not.",
+      "Render phase → commit phase → refs and <code>useLayoutEffect</code> synchronously → <code>useEffect</code> on a short timeout (\"passive effects\").",
+      "<code>key</code> is an identity instruction, not a prop. Change a key and React destroys the instance, its DOM, and its state, then builds new ones.",
+      "Two ways to stop the render cascade: <code>React.memo</code> (child decides) or returning the same element reference, e.g. <code>props.children</code> (parent decides).",
+      "Mutating state breaks the bailout — same reference means React may throw the render away and never update."
+    ],
+    flag:{k:"dated", label:"One stale section", txt:"\"React Forget\" in the Future Improvements section shipped as <b>React Compiler</b>. Everything before that section is still accurate."}
+  },
+  {
+    t:"A Visual Guide to React Rendering", a:"Alex Sidorenko · 2021 · multi-part", sec:[9], status:"live", origin:"jonas",
+    url:"https://alexsidorenko.com/blog/react-render-always-rerenders/",
+    when:"Watch the animations right after the guide above. Ten minutes, and the \"parent renders → children render\" rule stops being abstract.",
+    k:[
+      "Components with no props and no state still re-render when their parent does — the animation makes this undeniable.",
+      "<code>memo</code> blocks the entire subtree below it, not just the memoised component.",
+      "Lifting <code>memo</code> higher moves the firewall higher — which is why the component directly under a context provider is the one worth memoising.",
+      "Keep going: the series continues into props, children, and context."
+    ]
+  },
+  {
+    t:"Why React Re-Renders", a:"Josh Comeau", sec:[9], status:"live", origin:"added",
+    url:"https://www.joshwcomeau.com/react/why-react-re-renders/",
+    when:"If Mark Erikson's guide is too dense on a first pass, start here instead and come back to it.",
+    k:[
+      "The single biggest misconception: re-renders are caused by state changes, not by prop changes.",
+      "Interactive demos let you watch the cascade rather than read about it.",
+      "Explains why the <code>children</code>-as-prop trick works, in plainer terms than most."
+    ]
+  },
+  {
+    t:"React re-renders guide: everything, all at once", a:"Nadia Makarevich · developerway", sec:[9], status:"live", origin:"added",
+    url:"https://www.developerway.com/posts/react-re-renders-guide",
+    when:"The practical counterpart: read when you are tempted to sprinkle <code>memo</code> everywhere.",
+    k:[
+      "Catalogues the real causes of re-renders and the myths (props changing, context, parent identity).",
+      "Explains why <code>memo</code> on a component that always gets new object or function props does nothing.",
+      "Composition often beats memoisation — move state down, or pass elements as children."
+    ]
+  },
+  {
+    t:"When does React render your component?", a:"Zhenghao He", sec:[9], status:"live", origin:"added",
+    url:"https://www.zhenghao.io/posts/react-rerender",
+    when:"Optional third angle on the same material. Useful if the first two left a gap.",
+    k:[
+      "Walks the bail-out paths React takes when it decides not to re-render.",
+      "Covers <code>StrictMode</code> double-rendering, which will confuse your <code>console.log</code> counts in section 9.",
+      "Good on why state updates are batched and what that means for reading state right after setting it."
+    ]
+  },
+  {
+    t:"State as a Snapshot", a:"react.dev", sec:[9], status:"live", origin:"added",
+    url:"https://react.dev/learn/state-as-a-snapshot",
+    when:"Read the moment Jonas shows that <code>setCount(count + 1)</code> twice only increments once. Twelve minutes, official, and it fixes the mental model permanently.",
+    k:[
+      "A render captures state as a value frozen in a closure. Your event handler can only ever see the value from the render that created it.",
+      "This is why <code>console.log</code> right after <code>setState</code> shows the old value — the variable genuinely has not changed.",
+      "Functional updates <code>setX(x => x + 1)</code> exist precisely to escape the snapshot.",
+      "React 18 batches every update in the same tick, not just the ones inside event handlers."
+    ]
+  },
+
+  {
+    t:"Inside Fiber: in-depth overview of the new reconciliation algorithm", a:"Max Koretskyi · 2018", sec:[9], status:"old", origin:"jonas",
+    url:"https://medium.com/react-in-depth/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react-e1c04700ef6e",
+    when:"Only if you want source-level detail. Read the Cartoon Intro and Build Your Own React first — they teach the same model with far less friction.",
+    k:[
+      "Elements are recreated every render; fibers persist across renders and hold state, DOM references, and the effect queue.",
+      "Two trees: <code>current</code> (on screen) and <code>workInProgress</code> (the draft), linked by the <code>alternate</code> pointer. React never shows a partial tree.",
+      "Fibers form a linked list via <code>child</code>, <code>sibling</code>, and <code>return</code> — that is the traversal order.",
+      "The render phase can be paused, resumed, or thrown away. The commit phase cannot — it is always synchronous, because the user can see it.",
+      "A fiber is a unit of work, which is what makes scheduling and prioritisation possible at all."
+    ],
+    flag:{k:"old", label:"Degraded and pre-React-18", txt:"The author's own canonical copy at indepth.dev now returns 410, so Medium is the only surviving version and several code blocks and diagrams render empty. It also describes React 16.6: the <code>nextEffect</code> \"effects list\" it explains was replaced by subtree flags in React 18."}
+  },
+  {
+    t:"A Cartoon Intro to Fiber", a:"Lin Clark · React Conf 2017 · video", sec:[9], status:"old", origin:"jonas",
+    url:"https://www.youtube.com/watch?v=ZCuYPiUIONs",
+    when:"Twenty-five minutes and still the best <i>why</i> for Fiber. Watch it before reading any Fiber source-code walkthrough.",
+    k:[
+      "The browser has roughly 16ms per frame. Long synchronous render work misses it, and the user sees jank.",
+      "Splitting work into units means React can stop, let the browser breathe, and resume.",
+      "Not all updates are equally urgent — typing beats a background list refresh. That priority idea became concurrent React.",
+      "Render vs commit as two separate phases is introduced here, in cartoons."
+    ],
+    flag:{k:"old", label:"2017 vintage", txt:"The architecture stands, the vocabulary has moved on: what she calls async rendering shipped as concurrent rendering in React 18, and \"stack reconciler\" is now purely historical. Also note Jonas's link has a malformed query string (<code>?v=ID?ref=</code>) — use this cleaned one."}
+  },
+  {
+    t:"What Is React Fiber? React.js Deep Dive", a:"YouTube · video", sec:[9], status:"dated", origin:"jonas",
+    url:"https://www.youtube.com/watch?v=0ympFIwQFJw",
+    when:"Optional. Redundant if you have watched the Lin Clark talk and worked through Build Your Own React.",
+    k:[
+      "Covers the same ground as the Cartoon Intro at a slower, more code-oriented pace.",
+      "Useful if you prefer seeing the fiber object inspected in DevTools rather than drawn."
+    ],
+    flag:{k:"dated", label:"Unverified", txt:"I could not confirm this video's current title, uploader, or availability. The video ID is well-formed, so try it — but Jonas's version of the link is also malformed (<code>?v=ID?ref=</code>) and will fail. Use this cleaned URL."}
+  },
+  {
+    t:"Build Your Own React (Didact)", a:"Rodrigo Pombo · pomb.us", sec:[9,11], status:"live", origin:"jonas",
+    url:"https://pomb.us/build-your-own-react",
+    when:"The highest-value item in this whole list, and the most work. Set aside an afternoon and actually type it. Do it after section 9, before section 11.",
+    k:[
+      "About 200 lines rebuilds <code>createElement</code>, <code>render</code>, fibers, reconciliation, function components, and <code>useState</code>.",
+      "You write the hooks implementation yourself — after which \"hooks rely on call order\" is not a rule you memorise, it is a thing you built.",
+      "Concurrent rendering via <code>requestIdleCallback</code> makes work-splitting concrete in about ten lines.",
+      "The commit phase exists in your own code, so the render/commit split stops being jargon."
+    ],
+    flag:{k:"live", label:"Use this link, not the repo", txt:"Jonas links the <code>pomber/didact</code> GitHub repo, whose own README tells you to skip ahead to this post. The blog post is self-contained and is the only version that includes the hooks chapter."}
+  },
+
+  {
+    t:"The React and React Native Event System Explained", a:"Nicolas Couvrat · 2017", sec:[9], status:"old", origin:"jonas",
+    url:"https://levelup.gitconnected.com/how-exactly-does-react-handles-events-71e8b5e359f2",
+    when:"Skip it. Read the gist below instead — same topic, correct for the React you are using.",
+    k:[
+      "Still true: React does not attach a listener to your button; it delegates and synthesises.",
+      "Still true: <code>SyntheticEvent</code> exists to smooth over cross-browser differences.",
+      "Still true: React collects handlers by walking the component tree in a capture pass and a bubble pass."
+    ],
+    flag:{k:"old", label:"Three things here are now wrong", txt:"Written against React 16. Since <b>React 17</b>: listeners attach to the <b>root container</b>, not <code>document</code>; <b>event pooling was removed</b>, so you no longer need <code>e.persist()</code>; and the <code>EventPluginHub</code> it describes was refactored away."}
+  },
+  {
+    t:"Under the hood of event listeners in React", a:"Romain Trotard · gist · React 17 source", sec:[9], status:"live", origin:"jonas",
+    url:"https://gist.github.com/romain-trotard/76313af8170809970daa7ff9d87b0dd5",
+    when:"Read this instead of the 2017 article. Short, source-linked, and it explains the exact thing that changed.",
+    k:[
+      "React registers every event it knows about on the root container once, at <code>createRoot</code> time.",
+      "React stashes a pointer to the fiber on each DOM node under a randomised key like <code>__reactFiber$abc123</code> — you can inspect it in the console.",
+      "On a click, React finds the target's fiber, then walks <code>return</code> pointers upward collecting every matching handler into a dispatch queue.",
+      "That collect-then-dispatch design is why <code>stopPropagation</code> behaves the way it does.",
+      "In your handler, <code>target</code> is the element clicked; <code>currentTarget</code> is where the real listener lives."
+    ]
+  },
+
+  {
+    t:"Under the hood of React's hooks system", a:"Eytan Manor · The Guild · Nov 2018", sec:[9,11], status:"dated", origin:"jonas",
+    url:"https://the-guild.dev/blog/react-hooks-system",
+    when:"Read after Build Your Own React, when you want to check your mental model against the real implementation.",
+    k:[
+      "A dispatcher object is swapped in before render and nulled out after — that is the actual mechanism behind \"hooks can only be called inside a function component\".",
+      "Hooks are a linked list hanging off <code>fiber.memoizedState</code>, joined by <code>next</code>. Position in that list <i>is</i> the hook's identity.",
+      "<code>useState</code> is <code>useReducer</code> with a built-in <code>basicStateReducer</code> — which is exactly why <code>setX(x => x + 1)</code> works.",
+      "Effects live in a separate <code>updateQueue</code> with bitmask tags marking mount/unmount and passive/layout.",
+      "Passive effects run after paint, not after render. The distinction matters for layout measurement."
+    ],
+    flag:{k:"dated", label:"Written against an alpha", txt:"This predates the stable hooks release, so it references <code>useMutationEffect</code> — a hook that was cut and never shipped. The linked-list model and the useState-is-useReducer point are still correct."}
+  },
+  {
+    t:"Why Do React Hooks Rely on Call Order?", a:"Dan Abramov · Dec 2018", sec:[9,11], status:"live", origin:"jonas",
+    url:"https://overreacted.io/why-do-hooks-rely-on-call-order/",
+    when:"Read it when the rules of hooks feel arbitrary. It is the best answer to \"why can't I just call this in an if?\"",
+    k:[
+      "Every alternative API the team considered breaks. The post walks through eight of them and shows exactly where each fails.",
+      "String or symbol keys clash — and clash worst inside custom hooks, where you cannot see the whole chain.",
+      "The diamond problem: two custom hooks both using a third one must not collide. Call order solves this for free.",
+      "Call order means each <code>useState</code> call gets its own memory cell, so copy-pasting a hook into a custom hook just works.",
+      "Passing values between hooks — <code>const isOnline = useFriendStatus(recipientID)</code> — is the whole point of the design, and only plain function calls make it natural."
+    ]
+  },
+  {
+    t:"React hooks flow diagram", a:"Donavon West · GitHub", sec:[9,10], status:"live", origin:"added",
+    url:"https://github.com/donavon/hook-flow",
+    when:"Print it. Pin it next to your monitor for sections 9 and 10.",
+    k:[
+      "One diagram showing mount, update, and unmount with every hook slotted into the right moment.",
+      "Makes the ordering of lazy initialisers, render, layout effects, and passive effects visible at a glance.",
+      "Settles most \"why did my cleanup run then?\" questions without reading anything."
+    ]
+  },
+  {
+    t:"React hook & component timeline", a:"Jules Blom", sec:[9,10], status:"live", origin:"added",
+    url:"https://julesblom.com/writing/react-hook-component-timeline",
+    when:"The interactive companion to the diagram above. Use it when effect timing surprises you.",
+    k:[
+      "Shows render, commit, browser paint, and effects as a single timeline you can step through.",
+      "Clarifies the one distinction that trips everyone up: <code>useLayoutEffect</code> runs before paint, <code>useEffect</code> after.",
+      "Cited by Mark Erikson's rendering guide, so the two line up."
+    ]
+  },
+
+  {
+    t:"A Complete Guide to useEffect", a:"Dan Abramov · 2019", sec:[10], status:"live", origin:"added",
+    url:"https://overreacted.io/a-complete-guide-to-useeffect/",
+    when:"Read at the start of section 10. It is long and worth every minute — this is the piece that makes effects click.",
+    k:[
+      "Each render has its own props, state, event handlers, and effects. Effects see the render that created them, nothing newer.",
+      "Stop thinking \"run on mount / run on update\". Think \"synchronise this external thing with these values\".",
+      "The dependency array is not a list of things that trigger the effect. It is your honest declaration of what the effect uses.",
+      "Lying about dependencies is the root of most stale-value bugs — remove the need for a dependency instead of omitting it.",
+      "The functional updater and <code>useReducer</code> are the two standard escapes when a dependency is genuinely awkward."
+    ]
+  },
+  {
+    t:"You Might Not Need an Effect", a:"react.dev", sec:[10], status:"live", origin:"added",
+    url:"https://react.dev/learn/you-might-not-need-an-effect",
+    when:"Read immediately after the guide above, as the antidote. Section 10 will tempt you to reach for effects constantly.",
+    k:[
+      "You do not need an effect to transform data for rendering — do it during render.",
+      "You do not need an effect to handle user events — put the logic in the handler.",
+      "Resetting state when a prop changes is usually a <code>key</code>, not an effect.",
+      "Effects are for synchronising with systems outside React: the network, the DOM, a subscription, a timer.",
+      "Chained effects that each set state to trigger the next one are the classic anti-pattern."
+    ]
+  },
+  {
+    t:"Synchronizing with Effects", a:"react.dev", sec:[10], status:"live", origin:"added",
+    url:"https://react.dev/learn/synchronizing-with-effects",
+    when:"The official framing of what an effect is for. Short. Read before the two above if you want the simple version first.",
+    k:[
+      "Effects run after commit, which is why they can safely touch the DOM.",
+      "Cleanup is not just for unmount — it runs before every re-run, which is what makes the race-condition fix in usePopcorn work.",
+      "In StrictMode, React mounts, unmounts, and remounts every component in development on purpose, to surface missing cleanup.",
+      "The <code>ignore</code> flag pattern for fetch race conditions is spelled out here — the same one Jonas builds."
+    ]
+  },
+  {
+    t:"Myths about useEffect", a:"Kent C. Dodds · EpicReact", sec:[10], status:"live", origin:"added",
+    url:"https://epicreact.dev/myths-about-useeffect",
+    when:"Short. Read when you are arguing with the exhaustive-deps lint rule.",
+    k:[
+      "The dependency array is not a performance optimisation, and treating it as one causes bugs.",
+      "Split one large effect into several small independent ones instead of managing a giant dependency array.",
+      "Most \"the linter is wrong\" moments are the linter being right about a stale closure you have not hit yet."
+    ]
+  },
+
+  {
+    t:"So you think you know everything about React refs", a:"Vladimir Klepov · May 2021", sec:[11], status:"live", origin:"jonas",
+    url:"https://thoughtspile.github.io/2021/05/17/everything-about-react-refs/",
+    when:"Read during section 11, once Jonas has introduced <code>useRef</code> and you have used it for both a DOM node and a mutable value.",
+    k:[
+      "A ref is never updated in place. It is always unset to <code>null</code> first, then set to the new node.",
+      "Passing an inline arrow as a callback ref makes it unset and re-set on every single render — <code>useCallback</code> it, or hoist it.",
+      "A callback ref can be a <code>useState</code> setter, which gives you a re-render the moment the node attaches. Genuinely useful for measuring.",
+      "Ref assignment order relative to <code>useLayoutEffect</code> and cleanup is well defined — reading <code>ref.current</code> in layout-effect cleanup is not safe.",
+      "Merging two refs onto one element is harder than it looks; do not assume a component you did not write forwards refs correctly."
+    ],
+    flag:{k:"live", label:"Link moved", txt:"Jonas links <code>blog.thoughtspile.tech</code>; the canonical copy now lives at <code>thoughtspile.github.io</code>, which is the URL used here."}
+  },
+  {
+    t:"The Latest Ref Pattern", a:"Kent C. Dodds · EpicReact", sec:[11], status:"live", origin:"added",
+    url:"https://epicreact.dev/the-latest-ref-pattern-in-react",
+    when:"Read right after the refs post. This is the technique you will reach for when writing your own custom hooks.",
+    k:[
+      "Store a frequently-changing callback in a ref so your effect can call the latest version without listing it as a dependency.",
+      "Solves the \"my effect re-subscribes on every render because the callback is new\" problem cleanly.",
+      "It is a deliberate, bounded exception to the be-honest-about-dependencies rule — know why before you use it."
+    ]
+  },
+  {
+    t:"useSyncExternalStore First Look", a:"Jules Blom · 2023, updated Jun 2026", sec:[11], status:"live", origin:"jonas",
+    url:"https://julesblom.com/writing/usesyncexternalstore",
+    when:"The most advanced item here. Read it after you have built a couple of custom hooks and want to know why <code>useState</code> + <code>useEffect</code> is not always enough.",
+    k:[
+      "\"External store\" does not only mean Redux or Zustand. The browser is an external store — media queries, window size, <code>localStorage</code>.",
+      "Concurrent rendering can pause mid-render; external state can change during that pause and produce <b>tearing</b>, where one screen shows two values for the same data.",
+      "<code>getSnapshot</code> must return a stable value. Returning a fresh object literal gives you an infinite render loop — the post gets caught by exactly this.",
+      "<code>subscribe</code> must be stable too, or React resubscribes every render. Hoist it or wrap it in <code>useCallback</code>.",
+      "The third argument is for server rendering; with no meaningful server value, make the component client-only instead of faking one."
+    ],
+    flag:{k:"live", label:"Freshest thing on the list", txt:"Updated as recently as June 2026, including a revised note on the <code>Sec-CH-Prefers-Reduced-Motion</code> client hint. Trust it."}
+  },
+  {
+    t:"What is tearing?", a:"React 18 Working Group · discussion #69", sec:[11], status:"live", origin:"added",
+    url:"https://github.com/reactwg/react-18/discussions/69",
+    when:"Five minutes, and only if the tearing explanation above left you unsatisfied. Straight from the team.",
+    k:[
+      "Borrowed from graphics: a single screen showing pieces of two different frames.",
+      "It only became possible in React because concurrent rendering can yield mid-render.",
+      "It is a consequence of concurrency generally, not a React bug — any interruptible renderer has to deal with it."
+    ]
+  },
+
+  {
+    t:"When to useMemo and useCallback", a:"Kent C. Dodds", sec:[9,11], status:"live", origin:"added",
+    url:"https://kentcdodds.com/blog/usememo-and-usecallback",
+    when:"Read before you memoise anything in usePopcorn. Saves you from a lot of pointless code.",
+    k:[
+      "Memoisation is not free — you pay for the comparison and the retained reference every render.",
+      "Memoising a value that is cheap to compute is a net loss.",
+      "It only pays off when the child actually bails out, which means <i>every</i> prop has to be stable.",
+      "One always-new prop breaks memoisation for the entire component."
+    ]
+  },
+  {
+    t:"Fix the slow render before you fix the re-render", a:"Kent C. Dodds", sec:[9], status:"live", origin:"added",
+    url:"https://kentcdodds.com/blog/fix-the-slow-render-before-you-fix-the-re-render",
+    when:"Read alongside the rendering guides. It reorders your instincts about performance work.",
+    k:[
+      "A fast component rendering often is fine. A slow component rendering rarely is.",
+      "Find and fix the expensive render first; the re-render count may then stop mattering at all.",
+      "Profile before optimising — the DevTools Profiler tells you which commits were slow and why."
+    ]
+  },
+  {
+    t:"Should you add memo everywhere?", a:"react.dev · memo reference", sec:[9], status:"live", origin:"added",
+    url:"https://react.dev/reference/react/memo#should-you-add-memo-everywhere",
+    when:"Two minutes. The official position, useful when a teammate insists on memoising everything.",
+    k:[
+      "<code>memo</code> is worth it only when a component re-renders often with identical props and its render is genuinely expensive.",
+      "It is useless when props are always new, which is the common case for objects and inline functions.",
+      "No significant harm in over-applying it, but the cost is readability — which is a real cost."
+    ]
+  },
+
+  {
+    t:"react-use", a:"streamich · GitHub · 44k stars", sec:[11], status:"dated", origin:"jonas",
+    url:"https://github.com/streamich/react-use",
+    when:"Browse it as a reading list of custom-hook implementations, not as a dependency. Open the source of three or four hooks you have just built yourself and compare.",
+    k:[
+      "The best free catalogue of what people actually extract into custom hooks — sensors, lifecycles, state helpers, side effects.",
+      "<code>useLocalStorage</code>, <code>useDebounce</code>, and <code>usePrevious</code> are worth reading closely; you will write versions of all three.",
+      "Reading a hook's source is the fastest way to see the dependency-array reasoning from the useEffect guide applied for real."
+    ],
+    flag:{k:"dated", label:"Alive but slow-moving", txt:"Still receiving commits in 2026, but with roughly 360 open issues and 290 open pull requests, and a large surface area that predates React 18 conventions. Fine to read, worth thinking twice about as a dependency."}
+  },
+  {
+    t:"@react-hookz/web", a:"react-hookz · GitHub", sec:[11], status:"live", origin:"jonas",
+    url:"https://github.com/react-hookz/web",
+    when:"The one to reach for if you actually want a hooks dependency. Compare its implementations against react-use's for the same hook.",
+    k:[
+      "Built by a former react-use maintainer as its deliberate successor, with SSR safety as a design goal from the start.",
+      "Tree-shakeable and importable per-hook, so you ship only what you use.",
+      "Smaller and more opinionated: fewer hooks, each more carefully specified.",
+      "<code>useSyncedRef</code> is essentially the latest-ref pattern packaged — a good cross-check on that article."
+    ]
+  }
+];
+
+const SECLABEL = {8:"§08", 9:"§09", 10:"§10", 11:"§11"};
+const STATUSLABEL = {live:"Accurate today", dated:"Mostly holds", old:"Read as history"};
+
+const queue = document.getElementById("queue");
+
+DATA.forEach((d, i) => {
+  const li = document.createElement("li");
+  li.className = "node";
+  li.dataset.status = d.status;
+  li.dataset.origin = d.origin;
+  li.dataset.sections = d.sec.join(",");
+
+  const takeaways = d.k.map(x => `<li>${x}</li>`).join("");
+  const flag = d.flag
+    ? `<div class="flag"><b>${d.flag.label}</b>${d.flag.txt}</div>`
+    : "";
+  const host = new URL(d.url).hostname.replace(/^www\./, "");
+
+  li.innerHTML = `
+    <article class="card">
+      <button class="head" aria-expanded="false" aria-controls="body-${i}">
+        <p class="meta">
+          <span class="sec">${d.sec.map(s => SECLABEL[s]).join(" · ")}</span>
+          <span>${STATUSLABEL[d.status]}</span>
+          <span class="src">${d.origin === "jonas" ? "Jonas's list" : "Added"}</span>
+          <span class="caret">Takeaways +</span>
+        </p>
+        <h3 class="title">${d.t}</h3>
+        <p class="byline">${d.a}</p>
+        <p class="when">${d.when}</p>
+      </button>
+      <div class="expander"><div>
+        <div class="body" id="body-${i}">
+          <h4>What you actually take from it</h4>
+          <ul>${takeaways}</ul>
+          ${flag}
+          <a class="go" href="${d.url}" target="_blank" rel="noopener">Open on ${host} →</a>
+        </div>
+      </div></div>
+    </article>`;
+
+  li.querySelector(".head").addEventListener("click", e => {
+    const open = li.classList.toggle("open");
+    e.currentTarget.setAttribute("aria-expanded", String(open));
+    li.querySelector(".caret").textContent = open ? "Takeaways –" : "Takeaways +";
+  });
+
+  queue.appendChild(li);
+});
+
+/* ---------- filtering ---------- */
+
+const active = { section:"all", status:"all", origin:"all" };
+const nodes = [...queue.children];
+const tally = document.getElementById("tally");
+const empty = document.getElementById("empty");
+const reset = document.getElementById("reset");
+
+function apply(){
+  let shown = 0;
+  nodes.forEach(n => {
+    const ok =
+      (active.section === "all" || n.dataset.sections.split(",").includes(active.section)) &&
+      (active.status  === "all" || n.dataset.status === active.status) &&
+      (active.origin  === "all" || n.dataset.origin === active.origin);
+    n.hidden = !ok;
+    if (ok) shown++;
+  });
+  tally.textContent = `${shown} of ${nodes.length} showing`;
+  empty.hidden = shown !== 0;
+  reset.hidden = active.section === "all" && active.status === "all" && active.origin === "all";
+}
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const group = chip.dataset.filter;
+    active[group] = chip.dataset.value;
+    document.querySelectorAll(`.chip[data-filter="${group}"]`).forEach(c => {
+      c.setAttribute("aria-pressed", String(c === chip));
+    });
+    apply();
+  });
+});
+
+reset.addEventListener("click", () => {
+  active.section = active.status = active.origin = "all";
+  document.querySelectorAll(".chip").forEach(c => {
+    c.setAttribute("aria-pressed", String(c.dataset.value === "all"));
+  });
+  apply();
+});
+
+apply();
+
+/* ---------- text size ---------- */
+
+document.querySelectorAll(".textsize button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.documentElement.style.setProperty("--scale", btn.dataset.scale);
+    document.querySelectorAll(".textsize button").forEach(b => {
+      b.setAttribute("aria-pressed", String(b === btn));
+    });
+  });
+});
+</script>
+</body>
+</html>

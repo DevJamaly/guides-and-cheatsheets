@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flexbox Lab — learn it, then build with it</title>
+<style>
+:root{
+  --bg:#f1f0f6;--panel:#ffffff;--panel2:#f7f6fb;--text:#1c1a2e;--muted:#6c6983;--border:#dddbe8;
+  --purple:#7d5ba6;--purple-deep:#5e3f86;--purple-soft:#ebe3f5;
+  --orange:#f39a2a;--orange-deep:#c9761a;--orange-text:#3b2306;
+  --code:#161829;--code-text:#e8e8f2;--ax-main:#1e9fb0;--ax-cross:#e2477f;--ok:#2f9e5f;--danger:#c9453d;
+  --shadow:0 6px 24px rgba(30,20,60,.08);--r:14px;--hh:58px;
+}
+[data-theme="dark"]{
+  --bg:#131220;--panel:#1c1b2b;--panel2:#22212f;--text:#eeedf5;--muted:#a3a0ba;--border:#312f45;
+  --purple:#9a78c8;--purple-deep:#7a58a8;--purple-soft:#2c2340;
+  --orange:#f6a742;--orange-deep:#d98a25;--orange-text:#2a1a04;
+  --code:#0c0d17;--code-text:#e8e8f2;--ax-main:#3fc0d0;--ax-cross:#ff6a9d;--ok:#4cc57e;--danger:#ff7b73;
+  --shadow:0 6px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+code,pre,kbd,.mono{font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,"Liberation Mono",monospace}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,.fi:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+[hidden]{display:none!important}
+p code,li code,.gotcha code,.intro code{background:var(--purple-soft);color:var(--purple-deep);padding:1px 6px;border-radius:5px;font-size:.9em}
+[data-theme="dark"] p code,[data-theme="dark"] .gotcha code,[data-theme="dark"] .intro code{color:#d9c6ff}
+.muted{color:var(--muted);font-weight:400}
+.hint{color:var(--muted);font-size:.9rem;margin:0}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:16px;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:1.15rem;white-space:nowrap}
+.brand .mark{width:30px;height:20px;border-radius:5px;background:var(--purple);display:flex;gap:2px;padding:3px}
+.brand .mark i{flex:1;background:var(--orange);border-radius:2px}
+.tabs{display:flex;gap:4px;margin:0 auto;background:var(--panel2);padding:4px;border-radius:999px;border:1px solid var(--border)}
+.tabs button{border:0;background:transparent;padding:6px 18px;border-radius:999px;font-weight:600;color:var(--muted)}
+.tabs button.on{background:var(--purple);color:#fff}
+.theme{border:1px solid var(--border);background:var(--panel2);border-radius:999px;padding:6px 14px;font-weight:600;white-space:nowrap}
+
+/* ---------- views ---------- */
+.view{display:none}
+.view.on{display:grid;align-items:start}
+#learn.on{grid-template-columns:250px minmax(0,1fr)}
+#playground.on{grid-template-columns:340px minmax(0,1fr)}
+
+/* ---------- learn sidebar ---------- */
+.side{border-right:1px solid var(--border);background:var(--panel);padding:14px 12px;position:sticky;top:var(--hh);height:calc(100vh - var(--hh));overflow:auto;display:flex;flex-direction:column}
+.side nav{flex:1}
+.side h4{margin:14px 8px 6px;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.side nav button{display:flex;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:8px;font-weight:500;color:var(--text);font-size:.93rem}
+.side nav button:hover{background:var(--panel2)}
+.side nav button.on{background:var(--purple-soft);color:var(--purple-deep);font-weight:700}
+[data-theme="dark"] .side nav button.on{color:#e6d6ff}
+.side nav button i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:9px;background:var(--purple);flex:none}
+.side nav button.item-prop i{background:var(--orange)}
+.side nav button.recipe i{background:linear-gradient(90deg,var(--purple),var(--orange))}
+.chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);padding:12px 8px 4px;border-top:1px solid var(--border);margin-top:10px}
+.chk input{accent-color:var(--purple)}
+
+/* ---------- topic view ---------- */
+.topic{padding:28px 32px 48px;max-width:960px}
+.thead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.thead h1{margin:0;font-size:2rem;letter-spacing:-.03em;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace}
+.pill{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple-deep)}
+[data-theme="dark"] .pill{color:#e6d6ff}
+.pill.orange{background:#fdebd3;color:#8a4d05}
+[data-theme="dark"] .pill.orange{background:#3d2a10;color:#ffcf8b}
+.intro{font-size:1.05rem;margin:6px 0 18px;max-width:70ch}
+.stage{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r);padding:16px;overflow:auto}
+.fc{position:relative;background:var(--purple);border-radius:12px;padding:10px;min-height:56px;box-shadow:inset 0 0 0 3px var(--purple-deep)}
+.fi{background:var(--orange);color:var(--orange-text);font-weight:700;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep);user-select:none;white-space:nowrap}
+.fi.target{box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep),0 0 0 3px var(--purple),0 0 0 6px var(--ax-main)}
+.fi.selected{box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 var(--orange-deep),0 0 0 3px var(--purple),0 0 0 6px var(--ax-cross)}
+.stage.pg .fi{cursor:pointer}
+.stage.mini .fi{padding:8px 10px;font-size:.78rem}
+.legend{display:flex;gap:16px;align-items:center;font-size:.8rem;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.vals{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.vals button,.seg button{border:1px solid var(--border);background:var(--panel);border-radius:8px;padding:6px 12px;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;font-size:.85rem}
+.vals button:hover,.seg button:hover{border-color:var(--purple)}
+.vals button.on,.seg button.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.vals.orange button.on,.seg.orange button.on{background:var(--orange);border-color:var(--orange);color:var(--orange-text)}
+pre.code{background:var(--code);color:var(--code-text);padding:14px 18px;border-radius:12px;font-size:.88rem;line-height:1.55;overflow:auto;margin:0;tab-size:2}
+.c-sel{color:#c9a4ff}.c-prop{color:#7fd8ff}.c-val{color:#ffe08a}.c-cm{color:#8b8ea6}
+.gotcha{border-left:4px solid var(--orange);background:var(--panel);padding:12px 16px;border-radius:0 12px 12px 0;margin-top:18px;max-width:70ch}
+.gotcha strong{color:var(--orange-deep)}
+[data-theme="dark"] .gotcha strong{color:var(--orange)}
+.actions{margin-top:22px}
+.btn{border:0;background:var(--purple);color:#fff;padding:9px 16px;border-radius:10px;font-weight:600}
+.btn:hover{background:var(--purple-deep)}
+.btn.ghost{background:var(--panel);border:1px solid var(--border);color:var(--text)}
+.btn.ghost:hover{background:var(--panel2)}
+.btn.ghost.on{border-color:var(--purple);color:var(--purple-deep);background:var(--purple-soft)}
+[data-theme="dark"] .btn.ghost.on{color:#e6d6ff}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:6px 11px;font-size:.85rem;border-radius:8px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:1.05rem}
+.card p{margin:0;color:var(--muted);font-size:.9rem}
+.card .btn{align-self:flex-start;margin-top:auto}
+
+/* ---------- axes overlay ---------- */
+.axes{position:absolute;inset:0;pointer-events:none;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ax{position:absolute}
+.ax.main{--c:var(--ax-main)}
+.ax.cross{--c:var(--ax-cross)}
+.ax span{position:absolute;color:var(--c);background:var(--panel);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.ax.h{left:12px;right:12px;top:50%;height:0;border-top:2px dashed var(--c)}
+.ax.v{top:12px;bottom:12px;left:50%;width:0;border-left:2px dashed var(--c)}
+.ax.h span{left:0;top:-24px}
+.ax.v span{top:0;left:8px}
+.ax::after{content:"";position:absolute;border:6px solid transparent}
+.ax.h.r::after{right:-4px;top:-7px;border-left:10px solid var(--c)}
+.ax.h.l::after{left:-4px;top:-7px;border-right:10px solid var(--c)}
+.ax.v.d::after{bottom:-4px;left:-7px;border-top:10px solid var(--c)}
+.ax.v.u::after{top:-4px;left:-7px;border-bottom:10px solid var(--c)}
+
+/* ---------- playground ---------- */
+.controls{border-right:1px solid var(--border);background:var(--panel);padding:16px;position:sticky;top:var(--hh);height:calc(100vh - var(--hh));overflow:auto}
+.controls h3{display:flex;align-items:center;gap:8px;margin:6px 0 12px;font-size:.95rem}
+.controls h3+h3{margin-top:0}
+.controls h4{margin:0 0 10px;font-size:.9rem;color:var(--purple-deep)}
+[data-theme="dark"] .controls h4{color:#e6d6ff}
+.dot{display:inline-block;width:11px;height:11px;border-radius:3px}
+.dot.p{background:var(--purple)}.dot.o{background:var(--orange)}
+.row{margin-bottom:12px}
+.lbl{display:flex;justify-content:space-between;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;font-family:ui-monospace,"Cascadia Code",Menlo,Consolas,monospace}
+.lbl span{text-transform:none;color:var(--text)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:5px 9px;font-size:.8rem}
+input[type=range]{width:100%;accent-color:var(--purple);margin:0}
+.num{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--panel2);color:var(--text)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.grid3.two{grid-template-columns:repeat(2,1fr)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.sep{border:0;border-top:1px solid var(--border);margin:16px 0}
+.pgmain{padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.stage.pg{min-height:220px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.card.ch select{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
+#chStatus{font-weight:700;font-size:.9rem;min-height:1.4em}
+#chStatus.ok{color:var(--ok)}
+#chStatus.no{color:var(--muted)}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--code);color:var(--code-text);padding:10px 16px;border-radius:10px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;box-shadow:var(--shadow)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  #learn.on,#playground.on{grid-template-columns:1fr}
+  .side,.controls{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+  .side nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:6px}
+  .side nav h4{display:none}
+  .side nav button{width:auto;white-space:nowrap}
+  .topic{padding:20px 16px 40px}
+  .two{grid-template-columns:1fr}
+  .tabs{margin:0 0 0 auto}
+  .brand span.txt{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top" id="topbar">
+  <div class="brand"><span class="mark"><i></i><i></i><i></i></span><span class="txt">Flexbox Lab</span></div>
+  <nav class="tabs" aria-label="Sections">
+    <button data-view="learn" class="on">Learn</button>
+    <button data-view="playground">Playground</button>
+  </nav>
+  <button id="themeBtn" class="theme" aria-label="Toggle colour theme">☾ Dark</button>
+</header>
+
+<!-- ============ LEARN ============ -->
+<section id="learn" class="view on">
+  <aside class="side">
+    <nav id="topicNav" aria-label="Topics"></nav>
+    <label class="chk"><input type="checkbox" id="learnAx"> Show axes on demos</label>
+  </aside>
+  <main id="topicView"></main>
+</section>
+
+<!-- ============ PLAYGROUND ============ -->
+<section id="playground" class="view">
+  <aside class="controls">
+    <h3><i class="dot p"></i> Container</h3>
+    <div id="cSegs"></div>
+    <div class="row"><label class="lbl">gap <span id="gapVal"></span></label><input type="range" id="gap" min="0" max="48" step="2"></div>
+    <div class="row"><label class="lbl">height <span id="hgtVal"></span></label><input type="range" id="hgt" min="0" max="600" step="10"></div>
+    <div class="row"><label class="lbl">width <span id="widVal"></span></label><input type="range" id="wid" min="30" max="100" step="5"></div>
+
+    <hr class="sep">
+    <h3><i class="dot o"></i> Items <span id="countLbl" class="muted"></span></h3>
+    <div class="row btns"><button id="addItem" class="btn sm">+ Add item</button></div>
+    <p id="itemEmpty" class="hint">Click an item in the preview to edit it.</p>
+    <div id="itemForm" hidden>
+      <h4 id="itemTitle"></h4>
+      <div class="row"><label class="lbl">label</label><input id="iLabel" class="num" type="text"></div>
+      <div class="grid3">
+        <div><label class="lbl">flex-grow</label><input id="iGrow" class="num" type="number" min="0" step="any"></div>
+        <div><label class="lbl">flex-shrink</label><input id="iShrink" class="num" type="number" min="0" step="any"></div>
+        <div><label class="lbl">order</label><input id="iOrder" class="num" type="number" step="1"></div>
+      </div>
+      <div class="row"><label class="lbl">flex-basis</label><input id="iBasis" class="num" type="text" placeholder="auto"><div class="seg orange" id="basisChips" style="margin-top:6px"></div></div>
+      <div class="row"><label class="lbl">align-self</label><div class="seg orange" id="segSelf"></div></div>
+      <div class="grid3 two">
+        <div><label class="lbl">width (px)</label><input id="iW" class="num" type="number" min="0" placeholder="auto"></div>
+        <div><label class="lbl">height (px)</label><input id="iH" class="num" type="number" min="0" placeholder="auto"></div>
+      </div>
+      <div class="row btns"><button id="dupItem" class="btn ghost sm">Duplicate</button><button id="rmItem" class="btn ghost sm danger">Remove</button></div>
+    </div>
+  </aside>
+
+  <main class="pgmain">
+    <div class="pgbar">
+      <span class="hint">Click an item to select it. The CSS below updates as you go.</span>
+      <div class="btns">
+        <button id="axBtn" class="btn ghost sm">Show axes</button>
+        <button id="resetBtn" class="btn ghost sm">Reset</button>
+        <button id="copyBtn" class="btn sm">Copy CSS</button>
+      </div>
+    </div>
+    <div class="stage pg"><div id="pgBox" class="fc"></div></div>
+    <div class="two">
+      <pre id="pgCode" class="code"></pre>
+      <div class="card ch">
+        <h3>Challenges</h3>
+        <select id="chSel"><option value="">Pick a challenge…</option></select>
+        <p id="chDesc" class="hint">Pick one to start from a fresh container. It's marked solved the moment your settings match.</p>
+        <div id="chStatus"></div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const $ = (s, r=document) => r.querySelector(s);
+const el = (tag, cls, text) => { const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; };
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ---------- theme ---------- */
+const root=document.documentElement;
+function setTheme(t){ root.setAttribute('data-theme',t); $('#themeBtn').textContent = t==='dark' ? '☀ Light' : '☾ Dark'; }
+setTheme(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+$('#themeBtn').addEventListener('click', ()=> setTheme(root.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
+
+/* header height → sticky offsets */
+function setHH(){ root.style.setProperty('--hh', $('#topbar').offsetHeight+'px'); }
+window.addEventListener('resize', setHH);
+
+/* ---------- views ---------- */
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on', v.id===name));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on', b.dataset.view===name));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click', ()=>showView(b.dataset.view)));
+
+/* ---------- state ---------- */
+const CDEF={display:'flex',direction:'row',wrap:'nowrap',justify:'flex-start',alignItems:'stretch',alignContent:'stretch',gap:8,height:null,width:null};
+const IDEF={label:'',grow:0,shrink:1,basis:'auto',order:0,alignSelf:'auto',width:'',height:'',fontSize:''};
+function mkState(c, items){
+  const arr = Array.isArray(items) ? items : Array.from({length:items}, ()=>({}));
+  return { container:Object.assign({},CDEF,c||{}), items: arr.map((it,i)=>Object.assign({},IDEF,{label:String(i+1)},it)) };
+}
+
+/* ---------- rendering ---------- */
+const AX={ 'row':['h r','v d'], 'row-reverse':['h l','v d'], 'column':['v d','h r'], 'column-reverse':['v u','h r'] };
+function axesOverlay(dir){
+  const w=el('div','axes'); const pair=AX[dir]||AX.row;
+  const a=el('div','ax main '+pair[0]); a.appendChild(el('span',null,'main axis'));
+  const b=el('div','ax cross '+pair[1]); b.appendChild(el('span',null,'cross axis'));
+  w.append(a,b); return w;
+}
+function renderFlex(box, state, o){
+  o=o||{}; const c=state.container;
+  box.style.display=c.display; box.style.flexDirection=c.direction; box.style.flexWrap=c.wrap;
+  box.style.justifyContent=c.justify; box.style.alignItems=c.alignItems; box.style.alignContent=c.alignContent;
+  box.style.gap=c.gap+'px'; box.style.height=c.height?c.height+'px':''; box.style.width=c.width?c.width+'%':'';
+  box.innerHTML='';
+  state.items.forEach((it,i)=>{
+    const d=el('div','fi'+(i===o.selected?' selected':'')+(i===o.target?' target':''), it.label);
+    d.style.flexGrow=it.grow; d.style.flexShrink=it.shrink; d.style.flexBasis=it.basis; d.style.order=it.order;
+    d.style.alignSelf=it.alignSelf; d.style.width=it.width; d.style.height=it.height; d.style.fontSize=it.fontSize;
+    if(o.onSelect){
+      d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label','Item '+(i+1)+(i===o.selected?' (selected)':''));
+      d.addEventListener('click', ()=>o.onSelect(i));
+      d.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); o.onSelect(i); } });
+    }
+    box.appendChild(d);
+  });
+  if(o.axes) box.appendChild(axesOverlay(c.direction));
+}
+function cssBlock(sel, decls){
+  let h='<span class="c-sel">'+esc(sel)+'</span> {\n';
+  decls.forEach(d=>{ h+='  <span class="c-prop">'+esc(d[0])+'</span>: <span class="c-val">'+esc(d[1])+'</span>;'+(d[2]?' <span class="c-cm">/* '+esc(d[2])+' */</span>':'')+'\n'; });
+  return h+'}';
+}
+
+/* ---------- LEARN content ---------- */
+const many=(n,extra)=>Array.from({length:n},()=>Object.assign({},extra));
+const TOPICS=[
+ {id:'display',group:'Basics',title:'The container and its items',prop:'display',key:'display',values:['block','flex','inline-flex'],
+  intro:'Flexbox starts with one declaration: <code>display: flex</code> on a parent. That parent becomes the <strong>flex container</strong> (purple) and every direct child becomes a <strong>flex item</strong> (orange). Container properties arrange the group; item properties tune individuals. Switch between the values to see what changes.',
+  gotcha:'Only <em>direct</em> children become flex items — grandchildren are untouched, so nest another flex container when you need to lay those out. <code>inline-flex</code> behaves the same inside, but the container itself sits inline like a <code>span</code> and shrinks to fit its content.',
+  state:mkState({},3)},
+ {id:'axes',group:'Basics',title:'Main axis vs cross axis',prop:'flex-direction',key:'direction',forceAxes:true,values:['row','row-reverse','column','column-reverse'],
+  intro:'Every flex container has two axes. The <strong>main axis</strong> runs in the direction items flow (set by <code>flex-direction</code>); the <strong>cross axis</strong> runs perpendicular to it. <code>justify-content</code> works along the main axis, <code>align-items</code> along the cross axis. Flip the direction and watch both arrows rotate — the property names never change, only the axes do.',
+  gotcha:'The main axis is not always horizontal. In a column, <code>justify-content</code> moves items up and down and <code>align-items</code> moves them left and right. Most flexbox confusion is forgetting this.',
+  state:mkState({height:220},3)},
+ {id:'flex-direction',group:'Container',title:'flex-direction',prop:'flex-direction',key:'direction',values:['row','row-reverse','column','column-reverse'],
+  intro:'Sets the main axis, i.e. which way items flow. <code>row</code> is the default (left to right); <code>column</code> stacks them top to bottom; the <code>-reverse</code> variants flip where the line starts.',
+  gotcha:'<code>row-reverse</code> also flips <code>flex-start</code>, so items pile up on the right. Only the visual order changes — screen readers and keyboard focus still follow the HTML.',
+  state:mkState({height:220},4)},
+ {id:'flex-wrap',group:'Container',title:'flex-wrap',prop:'flex-wrap',key:'wrap',values:['nowrap','wrap','wrap-reverse'],
+  intro:'By default items squeeze onto a single line, shrinking if needed. <code>wrap</code> lets them break onto new lines when they run out of room; <code>wrap-reverse</code> stacks the lines the other way round.',
+  gotcha:'Items need a size (<code>flex-basis</code> or <code>width</code>) or they will just shrink and never wrap. Multi-line containers unlock <code>align-content</code>.',
+  state:mkState({},many(8,{basis:'110px'}))},
+ {id:'justify-content',group:'Container',title:'justify-content',prop:'justify-content',key:'justify',values:['flex-start','flex-end','center','space-between','space-around','space-evenly'],
+  intro:'Distributes leftover space along the <strong>main axis</strong>. The positional values (<code>flex-start</code>, <code>flex-end</code>, <code>center</code>) pack items together; the <code>space-*</code> values spread them out.',
+  gotcha:'If items already fill the line (for example with <code>flex-grow: 1</code>) there is no leftover space and <code>justify-content</code> does nothing. <code>space-between</code> puts nothing at the edges, <code>space-around</code> gives half-size edge gaps, <code>space-evenly</code> makes every gap equal.',
+  state:mkState({},many(3,{width:'80px'}))},
+ {id:'align-items',group:'Container',title:'align-items',prop:'align-items',key:'alignItems',values:['stretch','flex-start','flex-end','center','baseline'],
+  intro:'Aligns items along the <strong>cross axis</strong> within their line. <code>stretch</code> (the default) makes them fill the line\'s height; <code>baseline</code> lines up their text baselines even when font sizes differ.',
+  gotcha:'<code>stretch</code> only works when the item has no fixed cross size. Give an item a <code>height</code> (in a row) and it stops stretching.',
+  state:mkState({height:200},[{label:'text',fontSize:'13px'},{label:'text',fontSize:'26px'},{label:'text',fontSize:'18px'},{label:'text',fontSize:'36px'}])},
+ {id:'align-content',group:'Container',title:'align-content',prop:'align-content',key:'alignContent',values:['stretch','flex-start','flex-end','center','space-between','space-around','space-evenly'],
+  intro:'When items wrap onto several lines, <code>align-content</code> distributes those <em>lines</em> along the cross axis — think of it as <code>justify-content</code> for the lines rather than the items.',
+  gotcha:'Does nothing on a single-line container. It needs <code>flex-wrap: wrap</code> plus some spare cross-axis space, usually a fixed <code>height</code>.',
+  state:mkState({wrap:'wrap',height:280},many(8,{basis:'90px'}))},
+ {id:'gap',group:'Container',title:'gap',prop:'gap',key:'gap',values:[0,8,16,32],fmt:v=>v+'px',
+  intro:'Puts space between items (and between wrapped lines) without fiddling with margins. <code>row-gap</code> and <code>column-gap</code> set the two directions separately; <code>gap</code> sets both at once.',
+  gotcha:'<code>gap</code> only adds space <em>between</em> items, never at the outer edges — use padding on the container for that.',
+  state:mkState({wrap:'wrap'},many(8,{basis:'110px'}))},
+ {id:'order',group:'Items',target:'item',targetIndex:2,title:'order',prop:'order',key:'order',values:[-1,0,1,5],
+  intro:'Changes an item\'s visual position without touching the HTML. Lower numbers come first; items with the same number keep their source order. Every item defaults to <code>0</code>. Try it on the highlighted item.',
+  gotcha:'Only the <em>visual</em> order changes — keyboard focus and screen readers still follow the HTML, so use it sparingly.',
+  state:mkState({},5)},
+ {id:'flex-grow',group:'Items',target:'item',targetIndex:1,title:'flex-grow',prop:'flex-grow',key:'grow',values:[0,1,2,3],
+  intro:'How much of the <em>leftover</em> space an item takes, relative to its siblings. <code>0</code> (the default) means don\'t grow; an item with <code>2</code> gets twice as much spare space as one with <code>1</code>. Here every item starts with <code>flex-grow: 1</code>; change the highlighted one.',
+  gotcha:'Growth shares the leftover space, not the total width, so items with grow 1 and 2 are only in a 1:2 ratio when their starting sizes are equal. The shorthand <code>flex: 1</code> sets grow 1, shrink 1, basis 0, which is why it gives equal columns.',
+  state:mkState({},many(3,{grow:1}))},
+ {id:'flex-shrink',group:'Items',target:'item',targetIndex:1,title:'flex-shrink',prop:'flex-shrink',key:'shrink',values:[0,1,2,3],
+  intro:'How much an item shrinks when the items overflow the container, relative to its siblings. <code>1</code> (the default) shrinks; <code>0</code> refuses to. Each item here wants 250px in a container that\'s too narrow, so something has to give.',
+  gotcha:'An item can\'t shrink below its minimum content size unless you set <code>min-width: 0</code> — the classic "why won\'t my flex item shrink?" bug.',
+  state:mkState({width:60},many(3,{basis:'250px'}))},
+ {id:'flex-basis',group:'Items',target:'item',targetIndex:1,title:'flex-basis',prop:'flex-basis',key:'basis',values:['auto','0','100px','200px','50%'],
+  intro:'The item\'s starting size along the main axis, before <code>flex-grow</code> and <code>flex-shrink</code> do their work. <code>auto</code> (the default) uses the item\'s width or height, or its content; a length or percentage overrides that.',
+  gotcha:'<code>flex-basis</code> wins over <code>width</code> when both are set. Percentages are relative to the container\'s main size.',
+  state:mkState({},3)},
+ {id:'align-self',group:'Items',target:'item',targetIndex:1,title:'align-self',prop:'align-self',key:'alignSelf',values:['auto','flex-start','flex-end','center','stretch','baseline'],
+  intro:'Overrides the container\'s <code>align-items</code> for one item. Same values, plus <code>auto</code> (the default), which just inherits the container\'s setting.',
+  gotcha:'There is no <code>justify-self</code> in flexbox. To push a single item along the main axis, give it <code>margin-left: auto</code> (or <code>margin-top: auto</code> in a column).',
+  state:mkState({height:200},3)},
+ {id:'layouts',group:'Recipes',title:'Common layouts',kind:'layouts',
+  intro:'The handful of layouts you\'ll build over and over. Each one is just a few of the properties above combined. Open any of them in the playground and pull it apart.'}
+];
+const LAYOUTS=[
+ {title:'Navbar',desc:'Logo on the left, links pushed to the right, everything vertically centred.',state:mkState({justify:'space-between',alignItems:'center',height:70},[{label:'Logo'},{label:'Home · About · Contact'}])},
+ {title:'Centered box',desc:'The classic: one box dead-centre in its parent, both ways.',state:mkState({justify:'center',alignItems:'center',height:200},[{label:'Card',width:'140px',height:'90px'}])},
+ {title:'Sidebar + content',desc:'A fixed sidebar that never shrinks, next to content that takes whatever is left.',state:mkState({height:200},[{label:'Sidebar',basis:'160px',shrink:0},{label:'Content',grow:1}])},
+ {title:'Card grid',desc:'Cards with a minimum size that wrap and stretch to fill each row.',state:mkState({wrap:'wrap',gap:12},Array.from({length:7},(_,i)=>({label:'Card '+(i+1),basis:'140px',grow:1})))},
+ {title:'Sticky footer',desc:'Header, a main area that grows, and a footer pinned to the bottom.',state:mkState({direction:'column',height:220},[{label:'Header'},{label:'Main',grow:1},{label:'Footer'}])},
+ {title:'Equal columns',desc:'Any number of items sharing the width equally, whatever their content — the flex: 1 pattern.',state:mkState({height:150},[{label:'One',grow:1,basis:'0'},{label:'Two',grow:1,basis:'0'},{label:'Three',grow:1,basis:'0'}])}
+];
+
+const learnState={}; let learnAxes=false; let currentTopic=TOPICS[0].id;
+
+function buildNav(){
+  const nav=$('#topicNav'); nav.innerHTML=''; let g=null;
+  TOPICS.forEach(t=>{
+    if(t.group!==g){ g=t.group; nav.appendChild(el('h4',null,g)); }
+    const b=el('button', t.kind==='layouts' ? 'recipe' : (t.target==='item' ? 'item-prop' : ''));
+    b.dataset.id=t.id; b.append(el('i'), document.createTextNode(t.title));
+    b.addEventListener('click', ()=>{ currentTopic=t.id; renderTopic(); });
+    nav.appendChild(b);
+  });
+}
+function renderTopic(){
+  document.querySelectorAll('#topicNav button').forEach(b=>b.classList.toggle('on', b.dataset.id===currentTopic));
+  const t=TOPICS.find(x=>x.id===currentTopic); const view=$('#topicView'); view.innerHTML='';
+  const wrap=el('div','topic');
+  const head=el('div','thead');
+  const pill=el('span','pill'+(t.target==='item'?' orange':''), t.kind==='layouts' ? 'Recipes' : (t.target==='item' ? 'Item property' : 'Container property'));
+  head.append(pill, el('h1',null,t.title)); wrap.appendChild(head);
+  const intro=el('p','intro'); intro.innerHTML=t.intro; wrap.appendChild(intro);
+  if(t.kind==='layouts'){ renderLayouts(wrap); view.appendChild(wrap); return; }
+
+  if(!learnState[t.id]) learnState[t.id]=clone(t.state);
+  const st=learnState[t.id];
+  const isItem = t.target==='item'; const target = isItem ? t.targetIndex : -1;
+  const stage=el('div','stage'); const box=el('div','fc'); stage.appendChild(box); wrap.appendChild(stage);
+  if(isItem){ const lg=el('div','legend'); const i=el('i'); i.style.background='var(--ax-main)'; lg.append(i, document.createTextNode('the item being changed (.item-'+(target+1)+')')); wrap.appendChild(lg); }
+  const vals=el('div','vals'+(isItem?' orange':'')); wrap.appendChild(vals);
+  const pre=el('pre','code'); wrap.appendChild(pre);
+  const cur=()=> isItem ? st.items[target][t.key] : st.container[t.key];
+  const fmt=v=> t.fmt ? t.fmt(v) : String(v);
+  const draw=()=>{
+    renderFlex(box, st, {target:target, axes: !!t.forceAxes || learnAxes});
+    vals.innerHTML='';
+    t.values.forEach(v=>{
+      const b=el('button', String(v)===String(cur())?'on':'', fmt(v));
+      b.addEventListener('click', ()=>{ if(isItem) st.items[target][t.key]=v; else st.container[t.key]=v; draw(); });
+      vals.appendChild(b);
+    });
+    const decls=[]; if(!isItem && t.key!=='display') decls.push(['display','flex']);
+    if(t.id==='align-content'||t.id==='gap') decls.push(['flex-wrap','wrap']);
+    decls.push([t.prop, fmt(cur())]);
+    pre.innerHTML=cssBlock(isItem ? '.item-'+(target+1) : '.container', decls);
+  };
+  draw();
+  if(t.gotcha){ const g=el('div','gotcha'); g.innerHTML='<strong>Gotcha.</strong> '+t.gotcha; wrap.appendChild(g); }
+  const act=el('div','actions'); const b=el('button','btn','Open this in the playground →');
+  b.addEventListener('click', ()=>loadPlayground(st, t.title)); act.appendChild(b); wrap.appendChild(act);
+  view.appendChild(wrap);
+}
+function renderLayouts(wrap){
+  const grid=el('div','gallery');
+  LAYOUTS.forEach(L=>{
+    const card=el('div','card');
+    card.appendChild(el('h3',null,L.title)); card.appendChild(el('p',null,L.desc));
+    const stage=el('div','stage mini'); const box=el('div','fc'); renderFlex(box, L.state, {}); stage.appendChild(box); card.appendChild(stage);
+    const b=el('button','btn sm','Open in playground →'); b.addEventListener('click', ()=>loadPlayground(L.state, L.title)); card.appendChild(b);
+    grid.appendChild(card);
+  });
+  wrap.appendChild(grid);
+}
+$('#learnAx').addEventListener('change', e=>{ learnAxes=e.target.checked; renderTopic(); });
+
+/* ---------- PLAYGROUND ---------- */
+const CHALLENGES=[
+ {title:'Dead centre',desc:'Put the items in the exact middle of the container — horizontally and vertically.',check:s=>s.container.justify==='center'&&s.container.alignItems==='center'},
+ {title:'Push apart',desc:'In a row, make the first item hug the left edge, the last hug the right, with equal space between them.',check:s=>s.container.direction==='row'&&s.container.justify==='space-between'},
+ {title:'Stack it',desc:'Lay the items out top to bottom instead of left to right.',check:s=>s.container.direction==='column'},
+ {title:'Reverse without order',desc:'Show the items in reverse without changing any item\'s order value.',check:s=>s.container.direction==='row-reverse'&&s.items.every(i=>i.order===0)},
+ {title:'Let it wrap',desc:'Have at least 6 items, make them wrap onto new lines, and keep some gap between them.',check:s=>s.items.length>=6&&s.container.wrap==='wrap'&&s.container.gap>0},
+ {title:'One takes the rest',desc:'Exactly one item grows to fill the leftover space; the others keep their size.',check:s=>s.items.filter(i=>i.grow>0).length===1},
+ {title:'Sidebar + content',desc:'Exactly two items: the first is a 200px sidebar (flex-basis) that never shrinks and never grows; the second fills the rest.',check:s=>s.items.length===2&&s.items[0].basis==='200px'&&s.items[0].shrink===0&&s.items[0].grow===0&&s.items[1].grow>0},
+ {title:'Jump the queue',desc:'Move the last item to the front using order only.',check:s=>{ if(s.items.length<2) return false; const last=s.items[s.items.length-1]; return s.items.slice(0,-1).every(i=>i.order>last.order); }},
+ {title:'Break rank',desc:'Keep the container on align-items: stretch, but pull one item up to the top of the line.',check:s=>s.container.alignItems==='stretch'&&s.items.some(i=>i.alignSelf==='flex-start')},
+ {title:'Sticky footer',desc:'A column with exactly three items where only the middle one grows, so the last sits at the bottom.',check:s=>s.container.direction==='column'&&s.items.length===3&&s.items[1].grow>0&&s.items[0].grow===0&&s.items[2].grow===0}
+];
+const SEGS=[
+ {key:'display',label:'display',vals:['flex','inline-flex']},
+ {key:'direction',label:'flex-direction',vals:['row','row-reverse','column','column-reverse']},
+ {key:'wrap',label:'flex-wrap',vals:['nowrap','wrap','wrap-reverse']},
+ {key:'justify',label:'justify-content',vals:['flex-start','flex-end','center','space-between','space-around','space-evenly']},
+ {key:'alignItems',label:'align-items',vals:['stretch','flex-start','flex-end','center','baseline']},
+ {key:'alignContent',label:'align-content',vals:['stretch','flex-start','flex-end','center','space-between','space-around','space-evenly']}
+];
+const SELF_VALS=['auto','flex-start','flex-end','center','stretch','baseline'];
+const BASIS_CHIPS=['auto','0','100px','200px','50%'];
+const freshPg=()=>mkState({height:320},3);
+
+let pg=freshPg(), sel=-1, pgAxes=false, challenge=null;
+const segBtns=[]; const selfBtns=[];
+
+function buildPlayground(){
+  const host=$('#cSegs');
+  SEGS.forEach(s=>{
+    const row=el('div','row'); row.appendChild(el('label','lbl',s.label));
+    const seg=el('div','seg');
+    s.vals.forEach(v=>{ const b=el('button','',v); b.dataset.v=v; b.addEventListener('click',()=>{ pg.container[s.key]=v; syncAll(); }); seg.appendChild(b); segBtns.push({key:s.key,btn:b}); });
+    row.appendChild(seg); host.appendChild(row);
+  });
+  SELF_VALS.forEach(v=>{ const b=el('button','',v); b.dataset.v=v; b.addEventListener('click',()=>{ if(pg.items[sel]){ pg.items[sel].alignSelf=v; syncAll(); } }); $('#segSelf').appendChild(b); selfBtns.push(b); });
+  BASIS_CHIPS.forEach(v=>{ const b=el('button','',v); b.addEventListener('click',()=>{ if(pg.items[sel]){ pg.items[sel].basis=v; syncAll(); } }); $('#basisChips').appendChild(b); });
+
+  $('#gap').addEventListener('input', e=>{ pg.container.gap=+e.target.value; syncAll(); });
+  $('#hgt').addEventListener('input', e=>{ const v=+e.target.value; pg.container.height=v>0?v:null; syncAll(); });
+  $('#wid').addEventListener('input', e=>{ const v=+e.target.value; pg.container.width=v>=100?null:v; syncAll(); });
+
+  const item=()=>pg.items[sel];
+  $('#iLabel').addEventListener('input', e=>{ if(item()){ item().label=e.target.value; syncAll(); } });
+  $('#iGrow').addEventListener('input', e=>{ if(item()){ item().grow=Math.max(0, parseFloat(e.target.value)||0); syncAll(); } });
+  $('#iShrink').addEventListener('input', e=>{ if(item()){ item().shrink=Math.max(0, parseFloat(e.target.value)||0); syncAll(); } });
+  $('#iOrder').addEventListener('input', e=>{ if(item()){ item().order=parseInt(e.target.value,10)||0; syncAll(); } });
+  $('#iBasis').addEventListener('input', e=>{ if(item()){ const v=e.target.value.trim(); item().basis=v===''?'auto':v; syncAll(); } });
+  $('#iW').addEventListener('input', e=>{ if(item()){ const v=parseInt(e.target.value,10); item().width=isNaN(v)?'':Math.max(0,v)+'px'; syncAll(); } });
+  $('#iH').addEventListener('input', e=>{ if(item()){ const v=parseInt(e.target.value,10); item().height=isNaN(v)?'':Math.max(0,v)+'px'; syncAll(); } });
+
+  $('#addItem').addEventListener('click', ()=>{ pg.items.push(Object.assign({},IDEF,{label:String(pg.items.length+1)})); sel=pg.items.length-1; blurActive(); syncAll(); });
+  $('#rmItem').addEventListener('click', ()=>{ if(sel<0) return; pg.items.splice(sel,1); sel=-1; blurActive(); syncAll(); });
+  $('#dupItem').addEventListener('click', ()=>{ if(sel<0) return; pg.items.splice(sel+1,0,clone(pg.items[sel])); sel=sel+1; blurActive(); syncAll(); });
+  $('#resetBtn').addEventListener('click', ()=>{ pg=freshPg(); sel=-1; blurActive(); syncAll(); toast('Playground reset'); });
+  $('#axBtn').addEventListener('click', ()=>{ pgAxes=!pgAxes; $('#axBtn').classList.toggle('on',pgAxes); $('#axBtn').textContent=pgAxes?'Hide axes':'Show axes'; syncAll(); });
+  $('#copyBtn').addEventListener('click', copyCss);
+
+  const chSel=$('#chSel');
+  CHALLENGES.forEach((c,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=c.title; chSel.appendChild(o); });
+  chSel.addEventListener('change', e=>{ const v=e.target.value; challenge = v===''?null:+v; pg=freshPg(); sel=-1; blurActive(); syncAll(); if(challenge!=null) toast('Challenge started — fresh container'); });
+}
+function blurActive(){ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+function setVal(s,v){ const e=$(s); if(document.activeElement!==e) e.value=v; }
+
+function pgCss(){
+  const c=pg.container;
+  const cd=[['display',c.display],['flex-direction',c.direction],['flex-wrap',c.wrap],['justify-content',c.justify],['align-items',c.alignItems],['align-content',c.alignContent],['gap',c.gap+'px']];
+  if(c.height) cd.push(['height',c.height+'px']);
+  if(c.width) cd.push(['width',c.width+'%']);
+  let out=cssBlock('.container',cd);
+  pg.items.forEach((it,i)=>{
+    const d=[];
+    if(it.order!==0) d.push(['order',it.order]);
+    if(it.grow!==0) d.push(['flex-grow',it.grow]);
+    if(it.shrink!==1) d.push(['flex-shrink',it.shrink]);
+    if(it.basis!=='auto') d.push(['flex-basis',it.basis]);
+    if(it.alignSelf!=='auto') d.push(['align-self',it.alignSelf]);
+    if(it.width) d.push(['width',it.width]);
+    if(it.height) d.push(['height',it.height]);
+    if(d.length) out+='\n\n'+cssBlock('.item-'+(i+1),d);
+  });
+  out+='\n\n<span class="c-cm">/* '+pg.items.length+' item'+(pg.items.length===1?'':'s')+' inside .container; items with all defaults are omitted */</span>';
+  return out;
+}
+function syncAll(){
+  renderFlex($('#pgBox'), pg, {selected:sel, axes:pgAxes, onSelect:i=>{ sel=(sel===i?-1:i); blurActive(); syncAll(); }});
+  segBtns.forEach(s=>s.btn.classList.toggle('on', s.btn.dataset.v===String(pg.container[s.key])));
+  setVal('#gap',pg.container.gap); $('#gapVal').textContent=pg.container.gap+'px';
+  setVal('#hgt',pg.container.height||0); $('#hgtVal').textContent=pg.container.height?pg.container.height+'px':'auto';
+  setVal('#wid',pg.container.width||100); $('#widVal').textContent=(pg.container.width||100)+'%';
+  $('#countLbl').textContent='· '+pg.items.length+' item'+(pg.items.length===1?'':'s');
+  const it=pg.items[sel];
+  $('#itemEmpty').hidden=!!it; $('#itemForm').hidden=!it;
+  if(it){
+    $('#itemTitle').textContent='Item '+(sel+1)+' (.item-'+(sel+1)+')';
+    setVal('#iLabel',it.label); setVal('#iGrow',it.grow); setVal('#iShrink',it.shrink); setVal('#iOrder',it.order);
+    setVal('#iBasis',it.basis==='auto'?'':it.basis);
+    setVal('#iW',it.width?parseInt(it.width,10):''); setVal('#iH',it.height?parseInt(it.height,10):'');
+    selfBtns.forEach(b=>b.classList.toggle('on', b.dataset.v===it.alignSelf));
+  }
+  $('#pgCode').innerHTML=pgCss();
+  const st=$('#chStatus'), desc=$('#chDesc');
+  if(challenge==null){ desc.textContent='Pick one to start from a fresh container. It\'s marked solved the moment your settings match.'; st.textContent=''; st.className=''; }
+  else { const c=CHALLENGES[challenge]; desc.textContent=c.desc; const ok=c.check(pg); st.textContent=ok?'✓ Solved — nicely done.':'Not solved yet — keep going.'; st.className=ok?'ok':'no'; }
+}
+function loadPlayground(state,name){
+  pg=clone(state); sel=-1; challenge=null; $('#chSel').value='';
+  showView('playground'); syncAll(); toast('Loaded "'+name+'" into the playground');
+}
+async function copyCss(){
+  const txt=$('#pgCode').textContent;
+  try{ await navigator.clipboard.writeText(txt); toast('CSS copied to clipboard'); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    ta.remove(); toast(ok?'CSS copied to clipboard':'Copy failed — select the code and copy it manually');
+  }
+}
+let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ---------- init ---------- */
+setHH(); buildNav(); renderTopic(); buildPlayground(); syncAll(); showView('learn');
+})();
+</script>
+</body>
+</html>
