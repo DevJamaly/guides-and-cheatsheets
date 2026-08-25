@@ -1,0 +1,1841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Source of Truth · Full-Stack Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1116; --panel:#161B22; --panel-2:#1B222B; --line:#2A313B;
+  --line-soft:#222933; --text:#E6EDF3; --muted:#8B949E; --muted-2:#6E7681;
+  --accent:#35D0A5; --accent-dim:#35d0a533; --accent-line:#35d0a55c;
+  --flag:#F85149; --flag-dim:#f851491f;
+  --mode-default:#35D0A5; --mode-reduced:#E3B341; --mode-fallback:#58A6FF;
+  --done:#3FB950;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+  --disp:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --r:12px; --r-sm:8px;
+  --fs:1.2; /* global text scale — set from S.ui.textScale at render */
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(1100px 500px at 80% -10%, var(--accent-dim), transparent 60%), var(--ink);
+  color:var(--text); font-family:var(--body); -webkit-font-smoothing:antialiased; line-height:1.5;
+  transition:background .6s ease; padding-bottom:env(safe-area-inset-bottom);
+}
+a{color:var(--accent)}
+button{font-family:inherit}
+.mono{font-family:var(--mono)}
+.wrap{max-width:1120px; margin:0 auto; padding:20px 18px 80px}
+.top{display:flex; flex-wrap:wrap; align-items:flex-end; gap:18px 26px; padding:6px 2px 20px; border-bottom:1px solid var(--line-soft)}
+.brand .eyebrow{font-family:var(--mono); font-size:calc(11px*var(--fs)); letter-spacing:.22em; text-transform:uppercase; color:var(--muted-2)}
+.brand h1{font-family:var(--disp); font-weight:700; font-size:calc(22px*var(--fs)); margin:2px 0 0; letter-spacing:-.01em}
+.brand .who{font-size:calc(12.5px*var(--fs)); color:var(--muted); margin-top:3px}
+.readouts{display:flex; gap:22px 30px; flex-wrap:wrap; margin-left:auto}
+.ro{min-width:92px}
+.ro .k{font-family:var(--mono); font-size:calc(10px*var(--fs)); letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2)}
+.ro .v{font-family:var(--disp); font-weight:600; font-size:calc(17px*var(--fs)); margin-top:3px; color:var(--text)}
+.ro .v small{font-size:calc(11px*var(--fs)); color:var(--muted); font-weight:400}
+.ro.hl .v{color:var(--accent); transition:color .6s ease}
+nav.tabs{display:flex; gap:4px; margin:18px 0 22px; flex-wrap:wrap}
+nav.tabs button{background:transparent; border:1px solid transparent; color:var(--muted); padding:8px 14px; border-radius:99px; font-size:calc(13px*var(--fs)); cursor:pointer; font-family:var(--mono); letter-spacing:.04em; transition:.15s}
+nav.tabs button:hover{color:var(--text)}
+nav.tabs button.on{background:var(--panel); border-color:var(--line); color:var(--text)}
+nav.tabs button.on .dot{background:var(--accent)}
+.dot{display:inline-block; width:6px; height:6px; border-radius:99px; background:var(--muted-2); margin-right:7px; vertical-align:middle; transition:background .6s}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--r); padding:20px}
+.panel + .panel{margin-top:16px}
+.panel h2{font-family:var(--disp); font-size:calc(15px*var(--fs)); font-weight:600; margin:0 0 3px; letter-spacing:-.005em}
+.panel .sub{color:var(--muted); font-size:calc(12.5px*var(--fs)); margin:0 0 16px}
+.mode-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+.mode-head .lead{font-family:var(--mono); font-size:calc(11px*var(--fs)); letter-spacing:.18em; text-transform:uppercase; color:var(--muted-2)}
+.mode-head .wk{font-family:var(--mono); font-size:calc(12px*var(--fs)); color:var(--muted)}
+.modes{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+@media(max-width:640px){ .modes{grid-template-columns:1fr} }
+.mode{position:relative; text-align:left; cursor:pointer; color:var(--text); background:var(--panel-2); border:1px solid var(--line); border-radius:var(--r-sm); padding:14px 14px 13px; transition:.18s; overflow:hidden}
+.mode:hover{border-color:var(--muted-2)}
+.mode .mname{font-family:var(--disp); font-weight:600; font-size:calc(15px*var(--fs)); display:flex; align-items:center; gap:9px}
+.mode .swatch{width:9px; height:9px; border-radius:99px; box-shadow:0 0 0 3px transparent}
+.mode .cap{font-family:var(--mono); font-size:calc(10.5px*var(--fs)); color:var(--muted-2); margin-top:2px; letter-spacing:.02em}
+.mode .desc{font-size:calc(11.5px*var(--fs)); color:var(--muted); margin-top:9px; line-height:1.4}
+.mode[data-m="DEFAULT"] .swatch{background:var(--mode-default)}
+.mode[data-m="REDUCED"] .swatch{background:var(--mode-reduced)}
+.mode[data-m="FALLBACK"] .swatch{background:var(--mode-fallback)}
+.mode.on{border-color:var(--accent-line); background:linear-gradient(180deg,var(--accent-dim),transparent), var(--panel-2)}
+.mode.on .swatch{box-shadow:0 0 0 3px var(--accent-dim)}
+.mode.on::after{content:""; position:absolute; inset:0 0 auto 0; height:2px; background:var(--accent); transition:background .6s}
+.grouptitle{display:flex; align-items:center; gap:10px; margin:20px 0 9px; font-family:var(--mono); font-size:calc(10.5px*var(--fs)); letter-spacing:.16em; text-transform:uppercase; color:var(--muted-2)}
+.grouptitle .bar{flex:1; height:1px; background:var(--line-soft)}
+.grouptitle .cnt{color:var(--muted-2)}
+.task{display:flex; gap:12px; align-items:flex-start; padding:10px 4px; border-bottom:1px solid var(--line-soft); cursor:pointer}
+.task:last-child{border-bottom:0}
+.chk{flex:none; width:22px; height:22px; margin-top:2px; cursor:pointer; border-radius:6px; border:1.5px solid var(--muted-2); display:grid; place-items:center; transition:.15s}
+.chk svg{width:11px; height:11px; opacity:0; transform:scale(.6); transition:.15s}
+.task.done .chk{background:var(--done); border-color:var(--done)}
+.task.done .chk svg{opacity:1; transform:scale(1)}
+.task.touched .chk{background:var(--done); border-color:var(--done)}
+.task.touched .chk svg{opacity:1; transform:scale(1)}
+.btn.armed,.sbtn.armed{border-color:var(--flag)!important; color:var(--flag)!important; background:var(--flag-dim)!important}
+#toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 16px; font-size:calc(13px*var(--fs)); max-width:min(92vw,560px); box-shadow:0 8px 30px #0008; opacity:0; pointer-events:none; transition:.25s; z-index:50; line-height:1.5}
+#toast.on{opacity:1; transform:translateX(-50%) translateY(0)}
+.task .tl{flex:1; min-width:0}
+.task .tt{font-size:calc(14.5px*var(--fs)); transition:.15s; line-height:1.35}
+.task .sec{font-family:var(--mono); font-size:calc(10.5px*var(--fs)); letter-spacing:.04em; color:var(--accent); opacity:.85; margin-bottom:2px}
+.task .sec::before{content:"§ "; opacity:.7}
+.task .dw{font-size:calc(11.5px*var(--fs)); color:var(--muted); margin-top:4px; line-height:1.45}
+.task .dw b{color:var(--muted-2); font-weight:600; font-family:var(--mono); font-size:calc(9.5px*var(--fs)); letter-spacing:.1em; text-transform:uppercase; margin-right:4px}
+.task.done .dw,.task.done .sec{opacity:.55}
+.sbtn.ok{color:var(--done); border-color:#3fb95055}
+.sbtn.ok:hover:not(:disabled){color:var(--done); border-color:var(--done)}
+.task.done .tt{color:var(--muted-2); text-decoration:line-through}
+.task .meta{font-family:var(--mono); font-size:calc(10px*var(--fs)); color:var(--muted-2); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; letter-spacing:.02em}
+.tag{border:1px solid var(--line); border-radius:5px; padding:1px 6px; color:var(--muted)}
+.tag.t1{border-color:#58A6FF44; color:#79b8ff}
+.tag.t2{border-color:#E3B34144; color:#e3b341}
+.tag.t3{border-color:#35D0A544; color:#35D0A5}
+.tag.proves{border-color:var(--line); color:var(--muted-2)}
+.wkprog{display:flex; align-items:center; gap:14px; margin-top:6px}
+.ring{--p:0; width:52px; height:52px; flex:none; border-radius:99px; background:conic-gradient(var(--accent) calc(var(--p)*1%), var(--line) 0); display:grid; place-items:center; transition:background .5s}
+.ring i{width:40px; height:40px; border-radius:99px; background:var(--panel); display:grid; place-items:center; font-family:var(--mono); font-size:calc(12px*var(--fs)); font-style:normal; color:var(--text)}
+.wkprog .lab{font-size:calc(12px*var(--fs)); color:var(--muted)}
+.wkprog .lab b{color:var(--text); font-family:var(--disp)}
+.btn{background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:9px 14px; font-size:calc(12.5px*var(--fs)); cursor:pointer; font-family:var(--mono); letter-spacing:.03em; transition:.15s}
+.btn:hover{border-color:var(--muted-2)}
+.btn.pri{background:var(--accent); color:#06231b; border-color:var(--accent); font-weight:600}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px; font-size:calc(11.5px*var(--fs))}
+.row{display:flex; gap:9px; flex-wrap:wrap; align-items:center}
+.flags{margin-bottom:16px; display:flex; flex-direction:column; gap:8px}
+.flag{display:flex; align-items:flex-start; gap:12px; background:var(--flag-dim); border:1px solid #f851493d; border-radius:var(--r-sm); padding:13px 15px}
+.flag .fi{color:var(--flag); font-family:var(--mono); font-size:calc(11px*var(--fs)); letter-spacing:.14em; text-transform:uppercase; flex:none; margin-top:2px}
+.flag .ft{font-size:calc(12.5px*var(--fs)); color:var(--text)}
+.flag .ft b{color:var(--flag)}
+.track{border:1px solid var(--line); border-radius:var(--r-sm); margin-bottom:10px; overflow:hidden; background:var(--panel-2)}
+.track > .th{display:flex; align-items:center; gap:13px; padding:13px 15px; cursor:pointer}
+.track .idx{font-family:var(--mono); font-size:calc(11px*var(--fs)); color:var(--muted-2); width:26px; flex:none}
+.track .tn{flex:1; min-width:0}
+.track .tn .nm{font-family:var(--disp); font-weight:600; font-size:calc(14px*var(--fs)); display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.track .tn .dl{font-family:var(--mono); font-size:calc(10.5px*var(--fs)); color:var(--muted-2); margin-top:3px; letter-spacing:.02em}
+.pill{font-family:var(--mono); font-size:calc(9.5px*var(--fs)); letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:5px; border:1px solid var(--line)}
+.pill.done{color:var(--done); border-color:#3fb95044}
+.pill.active{color:var(--accent); border-color:var(--accent-line)}
+.pill.upcoming{color:var(--muted-2)}
+.pill.ms{color:#79b8ff; border-color:#58a6ff44}
+.mini{width:110px; flex:none}
+.mini .bar{height:5px; background:var(--line); border-radius:99px; overflow:hidden}
+.mini .bar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .4s}
+.mini .pct{font-family:var(--mono); font-size:calc(10px*var(--fs)); color:var(--muted); margin-top:4px; text-align:right}
+.track .body{display:none; padding:2px 15px 12px 55px; border-top:1px solid var(--line-soft)}
+.track.open .body{display:block}
+.track .body .task{padding:8px 2px}
+.effort-edit{display:flex; align-items:center; gap:8px; margin:12px 0 4px; font-family:var(--mono); font-size:calc(11px*var(--fs)); color:var(--muted)}
+.effort-edit input{width:56px; background:var(--ink); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:4px 7px; font-family:var(--mono); font-size:calc(12px*var(--fs))}
+.proj-dates{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:6px}
+@media(max-width:560px){ .proj-dates{grid-template-columns:1fr} }
+.pdate{background:var(--panel-2); border:1px solid var(--line); border-radius:var(--r-sm); padding:15px 16px}
+.pdate .k{font-family:var(--mono); font-size:calc(10px*var(--fs)); letter-spacing:.14em; text-transform:uppercase; color:var(--muted-2)}
+.pdate .d{font-family:var(--disp); font-weight:700; font-size:calc(24px*var(--fs)); margin:5px 0 2px; letter-spacing:-.01em}
+.pdate.soft .d{color:var(--accent); transition:color .6s}
+.pdate .note{font-size:calc(11px*var(--fs)); color:var(--muted)}
+.vel{display:flex; gap:26px; flex-wrap:wrap; margin:16px 0 4px; padding-top:16px; border-top:1px solid var(--line-soft)}
+.vel .k{font-family:var(--mono); font-size:calc(10px*var(--fs)); letter-spacing:.12em; text-transform:uppercase; color:var(--muted-2)}
+.vel .v{font-family:var(--disp); font-weight:600; font-size:calc(18px*var(--fs)); margin-top:3px}
+.strip{display:flex; flex-wrap:wrap; gap:4px; margin-top:8px}
+.cell{width:15px; height:15px; border-radius:4px; background:var(--line)}
+.cell.DEFAULT{background:var(--mode-default)}
+.cell.REDUCED{background:var(--mode-reduced)}
+.cell.FALLBACK{background:var(--mode-fallback)}
+.cell.now{outline:2px solid var(--text); outline-offset:1px}
+.tag.plan{color:var(--accent); border-color:var(--accent-line)}
+.tag.warn{color:var(--mode-reduced); border-color:#e3b34155}
+.task .meta .sess{color:var(--text)}
+.sbar{display:inline-block; width:54px; height:4px; background:var(--line); border-radius:99px; overflow:hidden; vertical-align:middle}
+.sbar i{display:block; height:100%; background:var(--accent); border-radius:99px}
+.sacts{flex:none; display:flex; gap:6px; opacity:.8; transition:opacity .15s; align-items:center}
+.task:hover .sacts{opacity:1}
+@media(max-width:560px){ .task{flex-wrap:wrap} .sacts{width:100%; padding-left:34px; opacity:1} }
+.sbtn{font-family:var(--mono); font-size:calc(10.5px*var(--fs)); padding:5px 9px; min-height:30px; border-radius:6px; border:1px solid var(--line); background:var(--panel-2); color:var(--muted); cursor:pointer}
+.sbtn:hover:not(:disabled){color:var(--text); border-color:var(--muted-2)}
+.sbtn:disabled{opacity:.35; cursor:default}
+.cell.logged{background:var(--muted-2)}
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; font-family:var(--mono); font-size:calc(10.5px*var(--fs)); color:var(--muted)}
+.legend span{display:flex; align-items:center; gap:6px}
+.legend i{width:10px; height:10px; border-radius:3px; display:inline-block}
+.thread{display:flex; align-items:center; gap:14px; padding:12px 2px; border-bottom:1px solid var(--line-soft)}
+.thread:last-child{border-bottom:0}
+.thread .ti{flex:1; min-width:0}
+.thread .nm{font-size:calc(13.5px*var(--fs))}
+.thread .nm.done{color:var(--muted-2); text-decoration:line-through}
+.thread .cad{font-family:var(--mono); font-size:calc(10.5px*var(--fs)); color:var(--muted-2); margin-top:2px}
+.thread .pbar{height:5px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:7px; max-width:230px}
+.thread .pbar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .3s}
+.counter{display:flex; align-items:center; gap:8px; font-family:var(--mono); flex:none}
+.counter button{width:28px; height:28px; border-radius:7px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer; font-size:calc(15px*var(--fs)); line-height:1}
+.counter .num{min-width:44px; text-align:center; font-size:calc(13px*var(--fs)); color:var(--text)}
+.pchk{flex:none; width:20px; height:20px; border-radius:6px; border:1.5px solid var(--muted-2); display:grid; place-items:center; cursor:pointer}
+.pchk.on{background:var(--done); border-color:var(--done)}
+.pchk svg{width:12px; height:12px}
+.drill{display:flex; gap:8px; flex-wrap:wrap; padding:8px 2px 2px; align-items:center}
+.dcell{width:42px; height:38px; border-radius:8px; border:1px solid var(--line); background:var(--panel-2); color:var(--muted); cursor:pointer; font-family:var(--mono); font-size:calc(12px*var(--fs)); display:grid; place-items:center; transition:.15s}
+.dcell.on{background:var(--done); border-color:var(--done); color:#06231b; font-weight:700}
+.dcell.today{outline:2px solid var(--accent); outline-offset:1px}
+.field{margin-bottom:14px}
+.field label{display:block; font-family:var(--mono); font-size:calc(11px*var(--fs)); letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2); margin-bottom:6px}
+.field input{width:100%; background:var(--ink); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:10px 12px; font-family:var(--body); font-size:calc(13px*var(--fs))}
+.field.inline{display:flex; align-items:center; gap:12px}
+.field.inline label{margin:0; flex:1}
+.field.inline input{width:80px}
+.field.inline select{background:var(--ink); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:9px 10px; font-family:var(--body); font-size:calc(13px*var(--fs))}
+.bf-back{position:fixed; inset:0; background:rgba(4,7,10,.72); z-index:40; display:flex; align-items:flex-start; justify-content:center; padding:36px 14px; overflow:auto}
+.bf{max-width:780px; width:100%; max-height:86vh; overflow:auto}
+.bf .htrk{font-family:var(--mono); font-size:calc(11px*var(--fs)); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:16px 0 6px}
+.bf .btask{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; background:var(--panel-2)}
+.bf .btask.done{opacity:.55}
+.bf .btask .lbl{flex:1; font-size:calc(13px*var(--fs)); line-height:1.4}
+.bf .btask .cnt{font-family:var(--mono); font-size:calc(12px*var(--fs)); color:var(--muted); white-space:nowrap}
+.bf .btask button{background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:6px; padding:4px 9px; cursor:pointer; font-family:var(--mono); font-size:calc(12px*var(--fs))}
+.bf .btask .bchk{width:18px; height:18px; flex:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; display:grid; place-items:center; background:var(--ink)}
+.bf .btask .bchk.on{background:var(--accent); border-color:var(--accent)}
+.muted-note{font-size:calc(12px*var(--fs)); color:var(--muted); line-height:1.6}
+.hint{background:var(--panel-2); border:1px dashed var(--line); border-radius:var(--r-sm); padding:12px 14px; font-size:calc(12px*var(--fs)); color:var(--muted); line-height:1.6; margin-top:14px}
+.hint b{color:var(--text)}
+.syncpill{display:inline-block; margin-top:7px; font-family:var(--mono); font-size:calc(10px*var(--fs)); letter-spacing:.06em; padding:2px 8px; border-radius:99px; border:1px solid var(--line); color:var(--muted-2); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.syncpill.ok{color:var(--done); border-color:#3fb95044}
+.syncpill.busy,.syncpill.dirty{color:var(--mode-reduced); border-color:#e3b34144}
+.syncpill.err,.syncpill.warn{color:var(--flag); border-color:#f851493d}
+.foot{margin-top:26px; text-align:center; font-family:var(--mono); font-size:calc(10.5px*var(--fs)); color:var(--muted-2); letter-spacing:.05em}
+::selection{background:var(--accent-dim)}
+@media(prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">Source of Truth · v7</div>
+      <h1 id="brandTitle">Full-Stack Journey</h1>
+      <div class="who" id="brandWho"></div>
+      <div class="syncpill off" id="syncPill">sync off · local only</div>
+    </div>
+    <div class="readouts" id="readouts"></div>
+  </header>
+  <nav class="tabs" id="tabs">
+    <button data-tab="week" class="on"><span class="dot"></span>This Week</button>
+    <button data-tab="roadmap"><span class="dot"></span>Roadmap</button>
+    <button data-tab="projection"><span class="dot"></span>Projection</button>
+    <button data-tab="threads"><span class="dot"></span>Threads</button>
+    <button data-tab="data"><span class="dot"></span>Data</button>
+  </nav>
+  <main id="view"></main>
+  <div class="foot">Understand → Build → Move on · data lives in this browser · export from the Data tab</div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   ARCHITECTURE (v7) — two layers, kept deliberately separate:
+
+   1. CURRICULUM = SEED (this file). What the tasks ARE: order, labels, tier,
+      course section, "done when", default estimate. Authoritative. On every
+      load, normalize() re-aligns the saved data to SEED by id: tracks and
+      tasks are re-ordered to seed order, labels/section/doneWhen/tier are
+      refreshed from seed, tasks added to seed appear, tasks removed from seed
+      disappear if they have no progress. So editing SEED updates every device
+      on next load — no version bump needed for curriculum edits.
+
+   2. PROGRESS = the user's state. Per task: {logged, done, est, estCustom}.
+      Never overwritten by seed. est comes from seed until the user changes it
+      (estCustom) — after that the user's number wins.
+
+   TASK MODEL:
+     est     estimated sittings (planning + projection). ≥1.
+     logged  sittings actually logged. Feeds velocity and "sessions this week".
+     done    boolean — the SECTION IS FINISHED. Set by the user (✓), never by
+             the counter. Green means "finished the content", never "spent the hours".
+     Derived: total(x)  = done ? est : max(est, logged+1)   ("at least one more")
+              credit(x) = done ? est : logged
+              left(x)   = total − credit                     (feeds projection)
+     Invariant: done && logged>0  ⇒  est = logged (the estimate becomes actual).
+
+   VERSION bumps are only for changes to the SHAPE of saved data (see upgrade()).
+   Track effort in "DEFAULT-weeks" = remaining sessions ÷ DEFAULT budget × parallel.
+   Pool items (certs, reading) use {total, at} unit counters, unchanged.
+   ============================================================ */
+const VERSION=8;
+// T(id,label,tier,est,proves,done) — done:true means "already finished before this tracker existed"
+const T=(id,label,tier,est,proves,done)=>({id,label,tier,est,logged:done===true?est:0,done:done===true,...(proves?{proves}:{})});
+const SEED={
+  meta:{ version:VERSION, startDate:"2026-04-01", createdAt:Date.now(), updatedAt:0 },
+  profile:{ name:"Taha Jamaly", position:"React · Jonas part 9 (usePopcorn) · TypeScript-native" },
+  budgets:{ DEFAULT:4, REDUCED:2, FALLBACK:0 },   // sessions planned per week, per mode
+  sessionHours:2,                                   // for the hours estimate only
+  softCap:8,                                        // sessions/week past which "Pull next" warns
+  provisionalVelocity:0.75,
+  keepWarmMinutes:30,
+  thresholds:{ stale:10, drill:3 },
+  ui:{ textScale:1.2 },                            // global text size multiplier (Data tab)
+  activity:{},          // {trackId: lastTouchedTimestamp}
+  drillLog:[],          // ["YYYY-MM-DD", ...]  quiz-drill days (local calendar days)
+  dsaLog:[],            // ["YYYY-MM-DD", ...]  DSA-problem days
+  repAnchor:null,       // "YYYY-MM-DD" — this date is a DSA day; the daily rep alternates from it (normalize sets it)
+  dsaTarget:180,        // total DSA problems to aim for (Data tab)
+  counters:{ commits:0, blogPosts:0, dsaSolved:0 },
+  history:[],           // [{startISO, mode|null, planned, sessions, autoRolled?, estimated?}]
+  currentWeek:null,     // {startISO, mode, generatedAt, planned, items:[...]}
+  weekBaseline:null,    // {key:"YYYY-MM-DD" (Monday), total: sessions done across all tracks at week start}
+  tracks:[
+    { id:"git", kind:"phase", name:"Git & GitHub", detail:"Colt Steele", status:"done", parallel:1,
+      tasks:[T("git-1","Branching, PRs, rebase, conflicts",2,3,null,true)] },
+    { id:"web", kind:"phase", name:"Web Foundations", detail:"MDN · Cloudflare reading", status:"done", parallel:1,
+      tasks:[T("web-1","DNS, HTTP, browser render, SSL mental model",1,2,null,true)] },
+    { id:"js", kind:"phase", name:"JavaScript", detail:"Jonas — complete course", status:"done", parallel:1,
+      tasks:[T("js-1","Fundamentals → closures, this, prototypes",3,8,null,true),
+             T("js-2","Async: promises, async/await, event loop",3,4,null,true),
+             T("js-3","Forkify capstone (MVC, explain every async call)",3,6,null,true)] },
+    { id:"css", kind:"phase", name:"HTML · CSS · Tailwind", detail:"Kevin Powell · Tailwind docs", status:"done", parallel:1,
+      tasks:[T("css-1","Flexbox, box model, grid comfortable",3,3,null,true),
+             T("css-2","Rebuild one layout in Tailwind + a11y basics",3,3,null,true)] },
+    { id:"react", kind:"phase", name:"React + TypeScript", detail:"Jonas — Ultimate React · tasks follow the course section order; the § line on each task names the section · TS-native, hand-coded", status:"active", parallel:1, keepWarm:true,
+      tasks:[
+        T("react-1","Components, props, JSX — Pizza Menu",3,1,"components",true),
+        T("react-2","State, events, controlled forms — Steps / Flashcards",3,1,"state",true),
+        T("react-3","Thinking in React: lifting & derived state — Far Away",3,1,"state design",true),
+        T("react-4","Eat-N-Split practice project",3,1,"practice",true),
+        T("react-6","usePopcorn I: composition, component categories, fixing prop drilling, StarRating",3,1,"composition"),
+        T("react-5","How React works behind the scenes: rendering, diffing, keys, batching, events",3,1,"rendering model"),
+        T("react-7","usePopcorn II: useEffect, data fetching, loading/error states, cleanup",3,2,"effects/fetch"),
+        T("react-8","usePopcorn III: useRef + custom hooks (useMovies, useLocalStorageState, useKey)",3,1,"custom hooks"),
+        T("react-10","React Quiz: useReducer as a state machine",3,1,"useReducer"),
+        T("react-11","WorldWise I: React Router, nested routes, URL params & query state",3,2,"routing"),
+        T("react-12","WorldWise II: Context API, custom provider, useReducer in context",3,1,"context"),
+        T("react-13","WorldWise III: fake auth, protected routes, finish",3,1,"auth UI"),
+        T("react-14","Performance: memo/useMemo/useCallback, lazy loading + Suspense, Profiler, useEffect rules",3,1,"perf"),
+        T("react-15","Redux fundamentals + Redux Toolkit — Bank app",3,1,"redux"),
+        T("react-16","Fast React Pizza I: setup, Tailwind, Router data loading (loaders/actions)",3,2,"router data"),
+        T("react-17","Fast React Pizza II: RTK cart, thunks, forms, finish",3,1,"redux app"),
+        T("react-18","Wild Oasis I: setup, styled-components, Supabase schema + RLS",3,2,"data layer"),
+        T("react-19","Wild Oasis II: React Query reads, tables, URL-driven filter/sort",3,2,"react query"),
+        T("react-20","Wild Oasis III: mutations, react-hook-form, uploads",3,2,"mutations"),
+        T("react-9","Advanced patterns: render props, HOC, compound components (Modal, Menus)",3,1,"patterns"),
+        T("react-21","Wild Oasis IV: auth, user settings, protected app",3,1,"auth"),
+        T("react-22","Wild Oasis V: dashboard, charts, dark mode, deploy",3,2,"full app"),
+        T("react-23","Next.js I: RSC, App Router, layouts, data fetching, streaming — Wild Oasis website",3,2,"next.js"),
+        T("react-24","Next.js II: server actions, NextAuth, caching, deploy",3,2,"next.js"),
+        T("react-25","TS Handbook I: types, narrowing, generics",2,1,"TS"),
+        T("react-26","TS Handbook II: utility types, typing props/hooks/events",2,1,"TS"),
+        T("react-27","RTL + Vitest: 3–5 component tests on one project app",2,2,"testing intro")
+      ] },
+    { id:"proj1", kind:"project", name:"Project 1 · Portfolio Site", detail:"Next.js static → Vercel/GH Pages → tjamaly.com · CI origin", status:"upcoming", parallel:1,
+      tasks:[
+        T("p1-1","Scaffold Next.js (TS, Tailwind), IA + design tokens",3,2,"setup"),
+        T("p1-2","Home, about, projects list pages",3,2,"frontend"),
+        T("p1-3","MDX blog + case-study template",3,2,"content system"),
+        T("p1-4","Static export → deploy → custom domain tjamaly.com",3,1,"deployment"),
+        T("p1-5","CI: lint → typecheck → test → deploy · Lighthouse ≥95",2,2,"CI/CD origin"),
+        T("p1-6","Blog post: Unity coroutines → JS async",2,2,"writing")
+      ] },
+    { id:"backend", kind:"phase", name:"Backend Reading", detail:"roadmap.sh/backend · Hussein Nasser", status:"upcoming", parallel:1,
+      tasks:[
+        T("be-1","roadmap.sh/backend — Internet, HTTP, DNS only",1,1),
+        T("be-2","Nasser: reverse proxy vs load balancer · HTTP/1.1 vs 2 vs 3",1,1),
+        T("be-3","Nasser: TCP vs UDP · TLS handshake",1,1)
+      ] },
+    { id:"node", kind:"phase", name:"Node.js + Express + Testing", detail:"Jonas Node — Express/auth teaching is stack-agnostic; do the real data layer in Postgres/Prisma, not Mongoose", status:"upcoming", parallel:1,
+      tasks:[
+        T("nd-1","Node internals: event loop, streams, modules",3,1,"node model"),
+        T("nd-2","Express: routing, middleware, MVC folder structure",3,1,"http server"),
+        T("nd-3","REST API design + error handling (operational vs programmer, global handler)",3,2,"api design"),
+        T("nd-4","Follow Jonas's Mongo/Mongoose sections for the teaching only",2,2,"mongo awareness"),
+        T("nd-5","Auth: JWT + bcrypt, protected routes, roles",3,2,"auth"),
+        T("nd-6","Security: rate limiting, helmet, sanitisation, OWASP Top 10 pass",3,1,"api security"),
+        T("nd-7","Postgres+Prisma parallel API I: schema + migrations, same endpoints",3,2,"postgres hands-on"),
+        T("nd-8","Postgres+Prisma parallel API II: auth, relations, pagination",3,2,"postgres hands-on"),
+        T("nd-9","Testing: Jest + Supertest integration tests",3,2,"testing"),
+        T("nd-10","Zod validation on every input + typed request layer",3,1,"validation"),
+        T("nd-11","Skim: SSR/email/file-upload sections",1,1),
+        T("nd-12","Deploy the API (Railway/Render/VPS) with env config",2,1,"deploy")
+      ] },
+    { id:"db", kind:"phase", name:"Databases", detail:"Nasser DB Engineering · Prisma · Odin Databases · PG tutorial · Use The Index Luke (parallel with Node)", status:"upcoming", parallel:0.7,
+      tasks:[
+        T("db-1","Nasser: indexes & B-trees",3,1,"db internals"),
+        T("db-2","Nasser: transactions, ACID, isolation levels",3,1,"db internals"),
+        T("db-3","Nasser: partitioning, sharding, replication overview",2,1,"scaling"),
+        T("db-4","PostgreSQL tutorial: joins, CTEs, window functions",3,2,"sql"),
+        T("db-5","Use The Index, Luke — one pass",1,1),
+        T("db-6","Prisma advanced: relations, transactions, raw queries",3,1,"prisma"),
+        T("db-7","Odin Databases + design NFC normalised schema + index plan",3,2,"applied schema")
+      ] },
+    { id:"proj2", kind:"project", name:"Project 2 · NFC Platform ★", detail:"Multi-tenant SaaS · better-auth · Stripe · Neon · Redis", status:"upcoming", parallel:1, milestone:"SOFT APPLICATIONS OPEN",
+      tasks:[
+        T("p2-1","Multi-tenant schema (orgs, members, cards) + migrations",3,2,"schema"),
+        T("p2-2","better-auth: email/password + OAuth, sessions, org switching",3,3,"auth"),
+        T("p2-3","Card CRUD + slug routing + QR generation",3,2,"product"),
+        T("p2-4","Public profile page + SEO/OG",3,2,"product"),
+        T("p2-5","Scan-event ingestion + analytics queries",3,2,"analytics"),
+        T("p2-6","Analytics dashboard",3,3,"dashboard"),
+        T("p2-7","Stripe Checkout + tiers",3,2,"payments"),
+        T("p2-8","Webhook handler + idempotency table + entitlement gating",3,2,"payments"),
+        T("p2-9","/healthz, structured logging, nightly reconciliation cron",2,2,"reliability"),
+        T("p2-10","Full CI: Jest + RTL + Playwright + AI-review Action",2,3,"testing pyramid"),
+        T("p2-11","Redis caching for public profiles + rate limits",3,1,"caching"),
+        T("p2-12","Ship v1.0.0: release notes, case study, deep blog post",2,3,"shipped")
+      ] },
+    { id:"proj3", kind:"project", name:"Project 3 · StockSense Deep", detail:"Scale · concurrency · ingestion (overlaps NFC tail)", status:"upcoming", parallel:0.6,
+      tasks:[
+        T("p3-1","Ingestion pipeline: ~500 SKUs → millions of rows, batching",3,3,"ETL/scale"),
+        T("p3-2","EXPLAIN ANALYZE index decisions (before/after table)",3,2,"indexing"),
+        T("p3-3","Atomic decrement race test",3,2,"concurrency"),
+        T("p3-4","WS realtime updates + convergence tests",3,2,"realtime"),
+        T("p3-5","Isolation-level anomaly repros in integration tests",3,2,"isolation"),
+        T("p3-6","Keyset vs offset pagination benchmark",2,1,"perf"),
+        T("p3-7","AI NL-search: Zod where-builder + evals — cuttable",2,3,"applied AI"),
+        T("p3-8","Ship + writeup",2,2,"shipped")
+      ] },
+    { id:"proj4", kind:"project", name:"Project 4 · Commerce Engine ★", detail:"Hand-rolled auth · Payment Intents · ledger · outbox · VPS", status:"upcoming", parallel:1,
+      tasks:[
+        T("p4-1","Hand-rolled auth: argon2id, sessions table, CSRF, throttling",3,3,"auth from scratch"),
+        T("p4-2","Catalog + cart + checkout flow",3,2,"product"),
+        T("p4-3","Raw Payment Intents: 3DS, every state, webhook state machine",3,3,"payments depth"),
+        T("p4-4","Refunds + disputes handling",3,2,"payments depth"),
+        T("p4-5","Double-entry ledger + money race test (non-negotiable)",3,3,"correctness"),
+        T("p4-6","Transactional outbox → BullMQ workers → DLQ + compensation",3,3,"async reliability"),
+        T("p4-7","Self-host on a VPS: nginx, systemd, TLS, backups, monitoring",3,3,"linux ops"),
+        T("p4-8","Nightly reconciliation vs Stripe",2,1,"reliability"),
+        T("p4-9","Ship + blog",2,2,"shipped")
+      ] },
+    { id:"proj5", kind:"project", name:"Project 5 · AI Avatar", detail:"Streaming · 3D · NeuroSync fork · multi-service (parallel)", status:"upcoming", parallel:0.6, milestone:"FULL JOB-SEARCH PUSH",
+      tasks:[
+        T("p5-1","Push-to-talk → streaming STT",3,2,"streaming"),
+        T("p5-2","Streaming LLM responses: abort chains, backpressure",3,2,"streaming"),
+        T("p5-3","NeuroSync fork on Modal GPU + viseme inference",3,3,"AI pipeline"),
+        T("p5-4","R3F avatar + lip-sync from visemes",3,3,"real-time 3D"),
+        T("p5-5","<2s E2E latency: benchmark, optimise, publish",3,2,"latency eng"),
+        T("p5-6","pgvector memory (RAG) + contract tests",3,3,"RAG"),
+        T("p5-7","Multi-service Docker compose + deploy",2,2,"ops"),
+        T("p5-8","Ship + system-design writeup",2,2,"shipped")
+      ] }
+  ],
+  certs:[
+    {id:"aws-1",label:"AWS CLF-C02 — Maarek course",total:15,at:0,tier:1},
+    {id:"aws-2",label:"AWS CLF-C02 — Bonso practice exams",total:6,at:0,tier:2},
+    {id:"aws-3",label:"AWS CLF-C02 — sit the exam",total:1,at:0,tier:2},
+    {id:"az-1",label:"Azure AZ-900 — Duffy + MS Learn",total:12,at:0,tier:1},
+    {id:"az-2",label:"Azure AZ-900 — practice exams",total:4,at:0,tier:2},
+    {id:"az-3",label:"Azure AZ-900 — sit the exam",total:1,at:0,tier:2}
+  ],
+  sysDesign:[
+    {id:"sd-1",label:"Hussein Nasser — free YouTube (exhaust first)",total:20,at:0},
+    {id:"sd-2",label:"systemdesignschool.io (interview-prep phase)",total:10,at:0},
+    {id:"sd-3",label:"Alex Xu — System Design Interview Vol.1",total:15,at:0}
+  ],
+  aiLiteracy:[
+    {id:"ai-1",label:"Karpathy — Intro to LLMs",total:1,at:0},
+    {id:"ai-2",label:"3Blue1Brown — Transformers series",total:4,at:0},
+    {id:"ai-3",label:"Karpathy — Deep Dive into LLMs",total:1,at:0},
+    {id:"ai-4",label:"Prompt engineering (Anthropic docs · promptingguide)",total:2,at:0},
+    {id:"ai-5",label:"Embeddings & RAG (pgvector) — before Project 5",total:2,at:0},
+    {id:"ai-6",label:"Structured outputs, tool use, streaming APIs",total:2,at:0},
+    {id:"ai-7",label:"MCP awareness — modelcontextprotocol.io",total:1,at:0}
+  ]
+};
+// ---------------------------------------------------------------------------
+// TASK_NOTES — curriculum detail per task id: which course SECTION a task is,
+// and a concrete DONE-WHEN so "finished" is a fact about the content, not the clock.
+// Section titles are Jonas's section names (Ultimate React / Node); numbers are
+// omitted on purpose because they shift between course versions. Edit freely —
+// changes flow to saved data on next load (see ARCHITECTURE).
+// ---------------------------------------------------------------------------
+const N=(section,doneWhen)=>({...(section?{section}:{}),...(doneWhen?{doneWhen}:{})});
+const TASK_NOTES={
+  // ---- React (Jonas — Ultimate React) ----
+  "react-1": N("Working With Components, Props, and JSX","last lecture of the section watched · Pizza Menu matches the finished app · committed"),
+  "react-2": N("State, Events, and Forms: Interactive Components","Steps + Flashcards finished · controlled form works · committed"),
+  "react-3": N("Thinking In React: State Management","Far Away finished: state lifted, derived state, sorting/clear · committed"),
+  "react-4": N("[Optional] Practice Project: Eat-N-Split","Eat-N-Split finished on your own first, then compared with Jonas's · committed"),
+  "react-6": N("Thinking in React: Components, Composition, and Reusability","usePopcorn skeleton split into NavBar / Main / Box with children & element props · StarRating built as a reusable, configurable component · committed"),
+  "react-5": N("How React Works Behind the Scenes","every lecture watched · you can explain in your own words: render vs commit phase, diffing rules, why keys, state batching, event delegation, effect timing · write it into your notes/README"),
+  "react-7": N("Effects and Data Fetching","usePopcorn fetches from OMDb with loading + error states · search debounced/aborted with cleanup · movie details + watched list working · committed"),
+  "react-8": N("Custom Hooks, Refs, and More State","useMovies, useLocalStorageState, useKey extracted · useRef used for input focus and the rating count · usePopcorn finished · committed"),
+  "react-10": N("The Advanced useReducer Hook","React Quiz finished: all state through one reducer, timer, restart · committed"),
+  "react-11": N("React Router: Building Single-Page Applications (SPA)","WorldWise: routes, nested routes, URL params + query string state, programmatic navigation · committed"),
+  "react-12": N("Advanced State Management: The Context API","WorldWise: CitiesContext (useReducer inside a provider) + AuthContext · committed"),
+  "react-13": N("Advanced State Management: The Context API (end)","fake auth, protected app route, WorldWise complete · committed"),
+  "react-14": N("Performance Optimization and Advanced useEffect","memo/useMemo/useCallback applied to the demos · WorldWise lazy-loaded with Suspense · Profiler run once · useEffect rules & closures reviewed"),
+  "react-15": N("Redux and Modern Redux Toolkit (with Thunks)","Bank app in Redux Toolkit with a thunk · classic vs RTK understood · committed"),
+  "react-16": N("React Router With Data Loading (v6.4+) · Tailwind CSS Crash Course","Fast React Pizza: menu via loader, order form via action, styled with Tailwind · committed"),
+  "react-17": N("Adding Redux and Advanced React Router","cart in RTK, user thunk (geolocation), priority update, Fast React Pizza finished · committed"),
+  "react-18": N("Setting Up Our Biggest Project + Styled Components · Supabase Crash Course","Wild Oasis scaffolded with styled-components + global styles · Supabase tables (cabins, settings, bookings, guests) + RLS + storage bucket · committed"),
+  "react-19": N("React Query: Managing Remote State (reads)","cabins table via useQuery · sort/filter driven by URL params · settings page · committed"),
+  "react-20": N("React Query: Managing Remote State (mutations)","create / edit / delete / duplicate cabins with useMutation · react-hook-form validation · image upload · committed"),
+  "react-9": N("Advanced React Patterns","render-props + HOC demos done · compound Modal and Menus built and used in the cabins table · committed"),
+  "react-21": N("Implementing More Features: Authentication, Dashboard, Dark Mode, etc. (auth)","login / logout / signup, protected app, update user data & avatar · committed"),
+  "react-22": N("Implementing More Features (dashboard) · Deployment With Netlify and Vercel","dashboard stats + charts, today's activity, check-in/out, dark mode · deployed URL live"),
+  "react-23": N("Overview of Next.js With the App Router · Building a Website With Next.js · Data Fetching, Caching, and Rendering","Wild Oasis website: layouts, cabins pages, data from Supabase, streaming with Suspense · committed"),
+  "react-24": N("Client and Server Interactions · Authentication With NextAuth · Mutations With Server Actions · Deploying to Vercel","reservation flow with server actions · NextAuth Google login + guest area · deployed"),
+  "react-25": N(null,"TS Handbook read from 'Everyday Types' to 'Generics' · one course app (usePopcorn or Quiz) fully typed, no any"),
+  "react-26": N(null,"utility types, typed props/hooks/events understood · a second project refactored to strict TS"),
+  "react-27": N(null,"3–5 RTL + Vitest component tests pass in one project app · runs in CI"),
+  // ---- Node (Jonas — Node.js, Express, MongoDB & More) — teaching only where noted ----
+  "nd-1": N("Introduction to Node.js and NPM · How Node.js Works: A Look Behind the Scenes","event loop, streams, module system explained in your notes · small streams demo committed"),
+  "nd-2": N("Express: Let's Start Building the Natours API!","routing, middleware chain, MVC folder structure in place · committed"),
+  "nd-3": N("Error Handling with Express","global error handler, AppError class, operational vs programmer errors · REST resource design written down"),
+  "nd-4": N("Introduction to MongoDB · Using MongoDB with Mongoose","lectures watched for the concepts only — no need to keep the code"),
+  "nd-5": N("Authentication, Authorization and Security (auth)","JWT signup/login, protect + restrictTo middleware, password reset · committed"),
+  "nd-6": N("Authentication, Authorization and Security (security)","rate limiting, helmet, sanitisation, parameter pollution · OWASP Top 10 checked off"),
+  "nd-11": N("Server-Side Rendering with Pug Templates · Advanced Features: Payments, Email, File Uploads","skimmed — you know what's there"),
+  "nd-12": N("Setting Up Git and Deployment","API reachable on a public URL with env config"),
+  "p1-4": N(null,"tjamaly.com resolves to the deployed site over HTTPS"),
+  "p1-5": N(null,"a push runs lint → typecheck → test → deploy · Lighthouse ≥95 on the home page")
+};
+for(const t of SEED.tracks) for(const x of t.tasks){ const n=TASK_NOTES[x.id]; if(n) Object.assign(x,n); }
+const SEED_TASK=new Map(); for(const t of SEED.tracks) for(const x of t.tasks) SEED_TASK.set(x.id,x);
+
+// Old (v4/v5) coarse task ids → the v6 session-sized tasks they cover. Used once, on upgrade.
+const OLD_TASK_MAP={
+  "react-1":["react-1"],"react-2":["react-1"],"react-3":["react-2"],"react-4":["react-3"],"react-5":["react-3"],
+  "react-6":["react-6","react-7"],"react-7":["react-7"],"react-8":["react-8"],"react-9":["react-11"],"react-10":["react-12"],
+  "react-11":["react-10"],"react-12":["react-14"],"react-13":["react-16","react-17"],"react-14":["react-18","react-19","react-20"],
+  "react-15":["react-21","react-22"],"react-16":["react-25","react-26"],"react-17":["react-27"],
+  "p1-1":["p1-1","p1-2","p1-4"],"p1-2":["p1-3"],"p1-3":["p1-5"],"p1-4":["p1-6"],
+  "be-1":["be-1"],"be-2":["be-2","be-3"],
+  "nd-1":["nd-1"],"nd-2":["nd-2"],"nd-3":["nd-5"],"nd-4":["nd-3","nd-6"],"nd-5":["nd-4"],"nd-6":["nd-7","nd-8"],"nd-7":["nd-9","nd-10"],
+  "db-1":["db-1","db-2"],"db-2":["db-6"],"db-3":["db-4","db-5"],"db-4":["db-7"],
+  "p2-1":["p2-1","p2-2"],"p2-2":["p2-3","p2-4","p2-5","p2-6"],"p2-3":["p2-7","p2-8"],"p2-4":["p2-9"],"p2-5":["p2-10"],"p2-6":["p2-12"],
+  "p3-1":["p3-1"],"p3-2":["p3-2"],"p3-3":["p3-3","p3-4"],"p3-4":["p3-5"],"p3-5":["p3-6"],"p3-6":["p3-7"],
+  "p4-1":["p4-1"],"p4-2":["p4-3","p4-4"],"p4-3":["p4-5"],"p4-4":["p4-6"],"p4-5":["p4-7"],"p4-6":["p4-8","p4-9"],
+  "p5-1":["p5-1","p5-2"],"p5-2":["p5-3"],"p5-3":["p5-4"],"p5-4":["p5-5"],"p5-5":["p5-6"],"p5-6":["p5-7","p5-8"]
+};
+const MODES=["DEFAULT","REDUCED","FALLBACK"];
+const POOL_KEYS=["certs","sysDesign","aiLiteracy"];
+const POOLS={ Certs:"certs", "System Design":"sysDesign", "AI Literacy":"aiLiteracy" };
+
+/* ===================== DATE HELPERS (all LOCAL time) ===================== */
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY=864e5;
+const pad2=n=>String(n).padStart(2,"0");
+const isoDay=d=>{const x=new Date(d); return x.getFullYear()+"-"+pad2(x.getMonth()+1)+"-"+pad2(x.getDate());};
+function parseLocalDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s??"").trim()); if(!m) return null;
+  const y=+m[1], mo=+m[2]-1, da=+m[3];
+  const d=new Date(y,mo,da); d.setHours(0,0,0,0);
+  if(isNaN(d) || d.getFullYear()!==y || d.getMonth()!==mo || d.getDate()!==da) return null;
+  return d;
+}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); x.setHours(0,0,0,0); return x; }
+function daysBetween(a,b){ return Math.round((a-b)/DAY); }
+function weekStartOf(d){ const x=new Date(d); if(isNaN(x)) return x; x.setHours(0,0,0,0); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x; }   // Monday
+function weekKey(d){ return isoDay(weekStartOf(d)); }
+function thisWeekStartISO(){ return weekStartOf(new Date()).toISOString(); }
+function validDate(v){ const d=new Date(v); return isNaN(d)?null:d; }
+function fmtDate(d){ return d.getDate()+" "+MONTHS[d.getMonth()]+" "+d.getFullYear(); }
+function softLabel(d){ if(!d||isNaN(d)) return "—"; const day=d.getDate(); const part=day<=10?"early":day<=20?"mid":"late"; return part+" "+MONTHS[d.getMonth()]+" "+d.getFullYear(); }
+function journeyWeek(){
+  const s=parseLocalDate(S.meta.startDate); if(!s) return "?";
+  const days=daysBetween(weekStartOf(new Date()), weekStartOf(s));
+  return Math.max(1, Math.round(days/7)+1);
+}
+
+/* ===================== MISC HELPERS ===================== */
+// In-page replacements for alert()/confirm(): dialogs are blocked in sandboxed previews and can be
+// suppressed by browsers after a few uses, which makes buttons look dead. toast() shows a message;
+// arm(btn,label,fn) turns a destructive button into a two-click confirm (auto-disarms after 4s).
+function toast(msg,ms=4200){ let t=document.getElementById("toast"); if(!t){ t=document.createElement("div"); t.id="toast"; document.body.appendChild(t); } t.textContent=msg; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),ms); }
+function arm(btn,label,fn){
+  const disarm=()=>{ delete btn.dataset.armed; clearTimeout(btn._t); if(btn._orig!=null) btn.textContent=btn._orig; btn.classList.remove("armed"); };
+  if(btn.dataset.armed){ disarm(); fn(); return; }
+  btn._orig=btn.textContent; btn.dataset.armed="1"; btn.textContent=label; btn.classList.add("armed");
+  btn._t=setTimeout(disarm,4000);
+}
+const el=(t,c)=>{const e=document.createElement(t); if(c)e.className=c; return e;};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isObj=v=>v!==null && typeof v==="object" && !Array.isArray(v);
+const num=(v,d)=>(typeof v==="number" && Number.isFinite(v))?v:d;
+const str=(v,d)=>typeof v==="string"?v:d;
+const clamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+const rint=(v,d)=>Math.round(num(v,d));
+
+/* ===================== STATE ===================== */
+const KEY="sot_journey_v4"; // same key since v4 — data migrates in place
+let SAFE_TO_SAVE=true;
+let LOAD_ERROR=null;
+let NOTICE=null;
+const OPEN=new Set();
+
+let S=load();
+function load(){
+  let raw=null;
+  try{ raw=localStorage.getItem(KEY); }
+  catch(e){ console.warn("localStorage unavailable — running in-memory.",e); return structuredClone(SEED); }
+  if(!raw) return structuredClone(SEED);
+  try{ return migrate(JSON.parse(raw)); }
+  catch(e){
+    console.error("Stored journey data could not be loaded. Running in-memory and NOT overwriting it.",e);
+    SAFE_TO_SAVE=false; LOAD_ERROR=e;
+    return structuredClone(SEED);
+  }
+}
+// bump=false for derived/automatic changes (status reconcile, auto-roll) so a fresh device never
+// looks "newer" than the cloud copy; only real user edits move the sync timestamp.
+function save(bump=true){
+  if(!SAFE_TO_SAVE) return;
+  if(bump) S.meta.updatedAt=Date.now();
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ console.warn("save failed",e); }
+  schedulePush();
+}
+
+function migrate(s){
+  if(!isObj(s) || !isObj(s.meta)) throw new Error("Not a journey file (missing meta).");
+  if(!Array.isArray(s.tracks) || !s.tracks.length) throw new Error("Not a journey file (missing tracks).");
+  if(num(s.meta.version,1) > VERSION) throw new Error("This data was written by a newer version of the tracker (v"+s.meta.version+"). Reload / update the app before using it.");
+  if(num(s.meta.version,1) < VERSION) upgrade(s);
+  return normalize(s);
+}
+// v4/v5 → v6: tasks become session-based and are re-seeded from the new plan; old ticks map onto
+// their new subtasks (done → fully done). Old weeks get an estimated session count. Pools carry over.
+// v6 → v7: task shape {sessions, done:number} → {est, logged, done:boolean}. Done by SHAPE in
+// convertTaskShape() (called from normalize on every task) so it is safe on any version, any file.
+// v7 → v8: weeks start on Monday (was Sunday); daily rep alternates quiz drill / DSA problem.
+function upgrade(s){
+  const v=num(s.meta.version,1);
+  s.activity = isObj(s.activity)?s.activity:{};
+  s.drillLog = Array.isArray(s.drillLog)?s.drillLog:[];
+  s.counters = isObj(s.counters)?s.counters:{commits:0, blogPosts:0};
+  s.history  = Array.isArray(s.history)?s.history:[];
+  const upgradePool=(arr, seedArr)=>{
+    if(!Array.isArray(arr)) return seedArr.map(x=>({...x}));
+    const out=arr.filter(isObj).map(it=>{
+      if(typeof it.at==="number" && typeof it.total==="number") return it;
+      const seed=seedArr.find(x=>x.id===it.id) || {};
+      const total = seed.total || 1;
+      return {id:it.id, label:it.label||seed.label, total, at: it.done?total:0, tier:it.tier||seed.tier};
+    });
+    const have=new Set(out.map(x=>x.id));
+    seedArr.forEach(x=>{ if(!have.has(x.id)) out.push({...x}); });
+    return out;
+  };
+  s.certs=upgradePool(s.certs, SEED.certs);
+  s.sysDesign=upgradePool(s.sysDesign, SEED.sysDesign);
+  s.aiLiteracy=upgradePool(s.aiLiteracy, SEED.aiLiteracy);
+
+  // tasks: if any track still uses boolean done / no sessions, re-seed everything from the new plan
+  // pre-v6 task = has neither the v6 shape (sessions:number) nor the v7 shape (logged:number)
+  const oldStyle = s.tracks.some(t=>isObj(t)&&Array.isArray(t.tasks)&&t.tasks.some(x=>isObj(x)&&typeof x.sessions!=="number"&&typeof x.logged!=="number"));
+  if(oldStyle){
+    const doneOld=new Set();
+    for(const t of s.tracks){ if(!isObj(t)||!Array.isArray(t.tasks)) continue; for(const x of t.tasks){ if(isObj(x)&&x.done===true) doneOld.add(x.id); } }
+    const doneNew=new Set();
+    doneOld.forEach(id=>{ (OLD_TASK_MAP[id]||[id]).forEach(n=>doneNew.add(n)); });
+    const oldTracks=s.tracks;
+    s.tracks=SEED.tracks.map(seedT=>{
+      const cur=oldTracks.find(t=>isObj(t)&&t.id===seedT.id)||{};
+      const t=structuredClone(seedT);
+      if(typeof cur.parallel==="number") t.parallel=cur.parallel;
+      t.tasks.forEach(x=>{ if(doneNew.has(x.id)){ x.done=true; x.logged=x.est; } });   // seed-done (known progress) stays done; old ticks add to it
+      return t;
+    });
+    s.currentWeek=null;                                                  // old week items point at old ids
+    const budget=(isObj(s.budgets)&&num(s.budgets.DEFAULT,0))||SEED.budgets.DEFAULT;
+    const w=isObj(s.weights)?s.weights:{DEFAULT:1,REDUCED:.4,FALLBACK:.1};
+    s.history=s.history.filter(isObj).map(h=>{
+      if(typeof h.sessions==="number") return h;
+      const est=Math.round(num(w[h.mode],0)*budget);
+      return {...h, sessions:est, planned:est, estimated:true};
+    });
+    s.weekBaseline=null;
+  }
+  delete s.weights;
+  if(isObj(s.currentWeek) && s.currentWeek.drill) delete s.currentWeek.drill;
+  if(v<8){
+    // Weeks now start on Monday. Old records were keyed by their Sunday start; the Monday inside
+    // that same old week (start+1d) covers 6 of its 7 days, so each record shifts one day forward.
+    s.history.forEach(h=>{ const d=validDate(isObj(h)?h.startISO:null); if(d && d.getDay()===0) h.startISO=addDays(d,1).toISOString(); });
+    // Re-anchor a declared week that covers today; anything else is closed out by closeWeekIfNeeded.
+    if(isObj(s.currentWeek) && validDate(s.currentWeek.startISO)){
+      const d=validDate(s.currentWeek.startISO), now=new Date();
+      if(now-d>=0 && now-d<7*DAY) s.currentWeek.startISO=weekStartOf(now).toISOString();
+    }
+    s.weekBaseline=null;   // re-stamped on first render under the Monday scheme
+  }
+  for(const t of s.tracks){ if(isObj(t)&&Array.isArray(t.tasks)&&t.tasks.some(x=>isObj(x)&&(x.done===true||x.done>0||x.logged>0))&&!s.activity[t.id]) s.activity[t.id]=Date.now(); }
+}
+function normalize(s){
+  s.meta.version=VERSION;
+  if(!parseLocalDate(s.meta.startDate)) s.meta.startDate=SEED.meta.startDate;
+  s.meta.createdAt=num(s.meta.createdAt,Date.now());
+  s.meta.updatedAt=Math.max(0,num(s.meta.updatedAt,0));
+  const pr=isObj(s.profile)?s.profile:{};
+  s.profile={name:str(pr.name,SEED.profile.name), position:str(pr.position,SEED.profile.position)};
+  const b=isObj(s.budgets)?s.budgets:{};
+  s.budgets={DEFAULT:clamp(rint(b.DEFAULT,SEED.budgets.DEFAULT),1,20), REDUCED:clamp(rint(b.REDUCED,SEED.budgets.REDUCED),0,20), FALLBACK:clamp(rint(b.FALLBACK,SEED.budgets.FALLBACK),0,20)};
+  s.sessionHours=clamp(num(s.sessionHours,SEED.sessionHours),0.25,8);
+  s.softCap=clamp(rint(s.softCap,SEED.softCap),1,40);
+  s.provisionalVelocity=clamp(num(s.provisionalVelocity,.75),0.05,3);
+  s.keepWarmMinutes=Math.max(1,rint(s.keepWarmMinutes,30));
+  const th=isObj(s.thresholds)?s.thresholds:{};
+  s.thresholds={stale:Math.max(1,rint(th.stale,10)), drill:Math.max(1,rint(th.drill,3))};
+  const ui=isObj(s.ui)?s.ui:{};
+  s.ui={textScale:clamp(num(ui.textScale,SEED.ui.textScale),0.8,2)};
+  const act={}; if(isObj(s.activity)) for(const [k,v] of Object.entries(s.activity)){ if(typeof v==="number"&&Number.isFinite(v)) act[k]=v; }
+  s.activity=act;
+  s.drillLog=[...new Set((Array.isArray(s.drillLog)?s.drillLog:[]).filter(d=>parseLocalDate(d)))].sort();
+  s.dsaLog=[...new Set((Array.isArray(s.dsaLog)?s.dsaLog:[]).filter(d=>parseLocalDate(d)))].sort();
+  if(!parseLocalDate(s.repAnchor)) s.repAnchor=isoDay(new Date());   // today becomes a DSA day
+  s.dsaTarget=clamp(rint(s.dsaTarget,180),1,2000);
+  const c=isObj(s.counters)?s.counters:{};
+  s.counters={commits:Math.max(0,rint(c.commits,0)), blogPosts:Math.max(0,rint(c.blogPosts,0)), dsaSolved:Math.max(0,rint(c.dsaSolved,0))};
+  // history: valid date, one entry per calendar week (later wins), sorted
+  const hist=new Map();
+  for(const h of (Array.isArray(s.history)?s.history:[])){
+    if(!isObj(h) || !validDate(h.startISO)) continue;
+    const mode=MODES.includes(h.mode)?h.mode:null;
+    const e={startISO:h.startISO, mode, planned:Math.max(0,rint(h.planned,0)), sessions:Math.max(0,rint(h.sessions,0))};
+    if(h.autoRolled) e.autoRolled=true; if(h.estimated) e.estimated=true;
+    hist.set(weekKey(new Date(h.startISO)), e);
+  }
+  s.history=[...hist.values()].sort((a,b)=>new Date(a.startISO)-new Date(b.startISO));
+  // tracks — 1) coerce every task to the v7 shape, 2) align to SEED (order + curriculum fields), 3) validate progress
+  const seenIds=new Set();
+  s.tracks=s.tracks.filter(t=>isObj(t) && typeof t.id==="string" && t.id && !seenIds.has(t.id) && seenIds.add(t.id));
+  if(!s.tracks.length) throw new Error("No valid tracks.");
+  for(const t of s.tracks){
+    const tids=new Set();
+    t.tasks=(Array.isArray(t.tasks)?t.tasks:[]).filter(x=>isObj(x)&&typeof x.id==="string"&&x.id&&!tids.has(x.id)&&tids.add(x.id));
+    for(const x of t.tasks) convertTaskShape(x);
+  }
+  alignToSeed(s);
+  for(const t of s.tracks){
+    t.kind = t.kind==="project"?"project":"phase";
+    t.name = str(t.name, t.id);
+    t.detail = str(t.detail, "");
+    t.status = ["done","active","upcoming"].includes(t.status)?t.status:"upcoming";
+    t.parallel = clamp(num(t.parallel,1),0,1);
+    if(typeof t.milestone!=="string" || !t.milestone) delete t.milestone;
+    t.keepWarm=!!t.keepWarm;
+    delete t._open; delete t.effort;
+    for(const x of t.tasks){
+      x.label=str(x.label,x.id);
+      x.tier=[1,2,3].includes(x.tier)?x.tier:1;
+      if(typeof x.proves!=="string") delete x.proves;
+      if(typeof x.section!=="string") delete x.section;
+      if(typeof x.doneWhen!=="string") delete x.doneWhen;
+      x.est=clamp(rint(x.est,1),1,99);
+      x.logged=clamp(rint(x.logged,0),0,999);
+      x.done=x.done===true;
+      if(!x.done || typeof x.doneAt!=="number" || !Number.isFinite(x.doneAt)) delete x.doneAt;
+      x.estCustom=x.estCustom===true; if(!x.estCustom) delete x.estCustom;
+      fixTask(x);
+    }
+  }
+  // current week
+  const cw=s.currentWeek; const taskById=(tid,xid)=>{ const t=s.tracks.find(y=>y.id===tid); return t&&t.tasks.find(y=>y.id===xid); };
+  if(isObj(cw) && MODES.includes(cw.mode) && validDate(cw.startISO)){
+    const items=(Array.isArray(cw.items)?cw.items:[]).filter(i=>isObj(i)&&typeof i.ref==="string"&&typeof i.group==="string");
+    const good=[];
+    for(const i of items){
+      if(i.trackId&&i.taskId){ const x=taskById(i.trackId,i.taskId); if(!x) continue; i.startDone=clamp(rint(i.startDone,0),0,x.logged); i.plan=clamp(rint(i.plan,1),1,99); i.bonus=!!i.bonus; delete i._done; }
+      else if(i.keepwarm){ i._done=!!i._done; }
+      else if(i.poolName){ i._done=!!i._done; if(typeof i._applied!=="number") delete i._applied; }
+      else continue;
+      good.push(i);
+    }
+    const dismissed=[...new Set((Array.isArray(cw.dismissed)?cw.dismissed:[]).filter(g=>typeof g==="string"&&POOLS[g]))];
+    s.currentWeek={startISO:cw.startISO, mode:cw.mode, generatedAt:num(cw.generatedAt,Date.now()), planned:Math.max(0,rint(cw.planned,0)), items:good, dismissed};
+  } else s.currentWeek=null;
+  const wb=s.weekBaseline;
+  s.weekBaseline=(isObj(wb)&&parseLocalDate(wb.key)&&typeof wb.total==="number")?{key:wb.key,total:Math.max(0,rint(wb.total,0))}:null;
+  // pools
+  for(const k of POOL_KEYS){
+    const arr=Array.isArray(s[k])?s[k]:SEED[k].map(x=>({...x}));
+    const ids=new Set();
+    s[k]=arr.filter(x=>isObj(x)&&typeof x.id==="string"&&x.id&&typeof x.label==="string"&&!ids.has(x.id)&&ids.add(x.id));
+    for(const x of s[k]){ x.total=Math.max(1,rint(x.total,1)); x.at=clamp(rint(x.at,0),0,x.total); if(!(x.tier===1||x.tier===2||x.tier===3)) delete x.tier; }
+  }
+  return s;
+}
+
+
+/* ---------- task shape + seed alignment (see ARCHITECTURE) ---------- */
+// v6 task {sessions, done:number} → v7 {est, logged, done:boolean}. Idempotent; leaves v7 tasks alone.
+function convertTaskShape(x){
+  if(typeof x.sessions==="number" || typeof x.done==="number"){
+    const est=Math.max(1,rint(x.sessions,1));
+    const oldDone = x.done===true ? est : Math.max(0,rint(x.done,0));
+    x.est=est; x.logged=Math.min(oldDone,est); x.done = oldDone>=est;
+    const sx=SEED_TASK.get(x.id); if(sx && sx.est!==est) x.estCustom=true;   // the user had changed the plan → keep theirs
+    delete x.sessions;
+  }
+  if(typeof x.done!=="boolean") x.done=false;
+  if(typeof x.logged!=="number") x.logged=0;
+  if(typeof x.est!=="number") x.est=1;
+  return x;
+}
+// Invariant: a finished task's estimate equals what it actually took (if anything was logged).
+function fixTask(x){ if(x.done && x.logged>0) x.est=x.logged; return x; }
+function hasProgress(x){ return x.done===true||x.logged>0; }
+// Re-align saved data to SEED: seed order; curriculum fields from seed; progress from saved.
+function alignToSeed(s){
+  const saved=new Map(s.tracks.map(t=>[t.id,t]));
+  const out=[];
+  for(const seedT of SEED.tracks){
+    const cur=saved.get(seedT.id); saved.delete(seedT.id);
+    const t=cur||{id:seedT.id, status:seedT.status, parallel:seedT.parallel, tasks:[]};
+    t.kind=seedT.kind; t.name=seedT.name; t.detail=seedT.detail; t.keepWarm=!!seedT.keepWarm;
+    if(seedT.milestone) t.milestone=seedT.milestone; else delete t.milestone;
+    const savedTasks=new Map((Array.isArray(t.tasks)?t.tasks:[]).map(x=>[x.id,x]));
+    const tasks=[];
+    for(const sx of seedT.tasks){
+      const cx=savedTasks.get(sx.id); savedTasks.delete(sx.id);
+      const x=cx||structuredClone(sx);                       // new-to-this-file task: seed progress applies
+      x.label=sx.label; x.tier=sx.tier;
+      if(sx.proves) x.proves=sx.proves; else delete x.proves;
+      if(sx.section) x.section=sx.section; else delete x.section;
+      if(sx.doneWhen) x.doneWhen=sx.doneWhen; else delete x.doneWhen;
+      if(cx && !cx.estCustom) x.est=sx.est;                    // seed estimate unless the user changed it
+      tasks.push(x);
+    }
+    for(const orphan of savedTasks.values()) if(hasProgress(orphan)) tasks.push(orphan);   // removed from seed but has history: keep
+    t.tasks=tasks; out.push(t);
+  }
+  for(const orphanT of saved.values()) if(Array.isArray(orphanT.tasks)&&orphanT.tasks.some(hasProgress)) out.push(orphanT);
+  s.tracks=out;
+}
+
+/* ===================== DOMAIN HELPERS ===================== */
+// See ARCHITECTURE. total = sittings the plan counts for this task; credit = sittings counted as achieved;
+// left = what the projection still has to fund. An unfinished task always has ≥1 left.
+const taskTotal   = x => x.done ? Math.max(1,x.est) : Math.max(x.est, x.logged+1);
+const taskCredit  = x => x.done ? Math.max(1,x.est) : x.logged;
+const taskLeft    = x => x.done ? 0 : taskTotal(x)-x.logged;
+const taskComplete= x => x.done===true;
+const taskDone    = taskCredit;                    // legacy name kept for the readouts
+function trackSessions(t){ return t.tasks.reduce((a,x)=>a+taskTotal(x),0); }
+function trackDoneSessions(t){ return t.tasks.reduce((a,x)=>a+taskCredit(x),0); }
+function trackLeftSessions(t){ return t.tasks.reduce((a,x)=>a+taskLeft(x),0); }
+function trackProgress(t){ const n=trackSessions(t); return n?trackDoneSessions(t)/n:1; }
+function trackAllDone(t){ return t.tasks.length>0 && t.tasks.every(x=>x.done); }
+function trackWeeks(t){ return trackSessions(t)/S.budgets.DEFAULT*(t.parallel??1); }         // effort in DEFAULT-weeks
+// Sittings actually logged, everywhere. This — and only this — feeds "sessions this week" and velocity.
+function totalLogged(){ return S.tracks.reduce((a,t)=>a+t.tasks.reduce((b,x)=>b+x.logged,0),0); }
+function activeTrack(){ return S.tracks.find(t=>t.status==="active") || S.tracks.find(t=>t.status==="upcoming") || S.tracks[S.tracks.length-1]; }
+function touch(trackId){ if(trackId) S.activity[trackId]=Date.now(); }
+function reconcileStatus(){
+  let changed=false, activeAssigned=false;
+  for(const t of S.tracks){
+    let st;
+    if(trackAllDone(t)) st="done";
+    else if(!activeAssigned){ st="active"; activeAssigned=true; if(!S.activity[t.id]){ S.activity[t.id]=Date.now(); changed=true; } }
+    else st="upcoming";
+    if(t.status!==st){ t.status=st; changed=true; }
+  }
+  return changed;
+}
+function findTask(trackId,taskId){ const t=S.tracks.find(x=>x.id===trackId); const x=t&&t.tasks.find(y=>y.id===taskId); return x?{t,x}:null; }
+// Log / unlog one sitting on a task. Never touches `done`. Returns true if anything changed.
+function logSession(trackId,taskId,delta){
+  const f=findTask(trackId,taskId); if(!f) return false;
+  const before=f.x.logged;
+  f.x.logged=clamp(f.x.logged+delta,0,999);
+  if(f.x.logged===before) return false;
+  fixTask(f.x);
+  if(delta>0) touch(trackId);
+  return true;
+}
+// Mark a task finished / reopen it. The estimate becomes what it actually took (if anything was logged).
+function setTaskDone(trackId,taskId,done){
+  const f=findTask(trackId,taskId); if(!f) return false;
+  if(f.x.done===!!done) return false;
+  f.x.done=!!done;
+  if(done){ f.x.doneAt=Date.now(); touch(trackId); } else delete f.x.doneAt;
+  fixTask(f.x);
+  return true;
+}
+// Change the estimate by hand. Marks it user-owned so seed edits no longer overwrite it.
+// After a task is finished with fewer sittings than planned, the week's plan shrinks (syncCurrentWeek).
+// Refill the freed capacity from the roadmap so the week stays at its budget (or whatever it was pulled up to).
+function topUpWeek(){
+  const cur=S.currentWeek; if(!cur) return false;
+  const before=cur.planned;
+  syncCurrentWeek();
+  const target=Math.max(S.budgets[cur.mode]||0, before);
+  if(weekPlanned(cur)>=target) return cur.planned!==before;
+  S.currentWeek=generateWeek(cur.mode, cur, target);
+  return true;
+}
+function setTaskPlan(trackId,taskId,est){
+  const f=findTask(trackId,taskId); if(!f) return false;
+  if(f.x.done) return false;                                   // a finished task's estimate is what it took
+  const before=f.x.est;
+  f.x.est=clamp(rint(est,f.x.est),1,99);
+  if(f.x.est===before) return false;
+  const sx=SEED_TASK.get(f.x.id);                              // back at the seed value → no longer "custom"
+  if(sx && sx.est===f.x.est) delete f.x.estCustom; else f.x.estCustom=true;
+  return true;
+}
+
+/* ===================== WEEK BASELINE / SESSIONS THIS WEEK ===================== */
+// Sessions logged this calendar week = sessions done now − sessions done when the week began.
+// The baseline is stamped the first time the app sees a new calendar week, whether or not a mode
+// was declared, so work logged before declaring (or without declaring) still counts.
+function weekSessions(){ const b=S.weekBaseline; if(!b||b.key!==weekKey(new Date())) return 0; return Math.max(0,totalLogged()-b.total); }
+function pushHistory(entry){
+  const key=weekKey(new Date(entry.startISO));
+  const i=S.history.findIndex(w=>weekKey(new Date(w.startISO))===key);
+  if(i>=0) S.history[i]=entry; else S.history.push(entry);
+  S.history.sort((a,b)=>new Date(a.startISO)-new Date(b.startISO));
+}
+function historyFor(key){ return S.history.find(w=>weekKey(new Date(w.startISO))===key)||null; }
+
+/* ===================== BACKFILL A CLOSED WEEK ===================== */
+/* BF holds the weekKey of the closed week being edited in the popup. Sittings logged there go onto
+   the task (roadmap advances, future week generation skips it) AND onto that week's record (velocity),
+   while the current week's baseline moves in step so "sessions this week" is untouched. */
+let BF=null, BF_SCROLL=0;
+function bfEntry(){ return BF ? historyFor(BF) : null; }
+function openBackfill(key){ BF=key; BF_SCROLL=0; render(); }
+function closeBackfill(){ BF=null; render(); }
+// Log `delta` sittings on a task, attributed to the closed week — never to the current one.
+function bfLogTask(trackId,taskId,delta){
+  const h=bfEntry(); const f=findTask(trackId,taskId); if(!h||!f) return;
+  const before=f.x.logged;
+  f.x.logged=clamp(f.x.logged+delta,0,999);
+  const d=f.x.logged-before; if(!d){ render(); return; }
+  fixTask(f.x);
+  h.sessions=Math.max(0,h.sessions+d); delete h.estimated;
+  if(S.weekBaseline) S.weekBaseline.total=Math.max(0,S.weekBaseline.total+d);         // current week unchanged
+  const cw=S.currentWeek;
+  if(cw) for(const i of cw.items){ if(i.trackId===trackId&&i.taskId===taskId) i.startDone=clamp((i.startDone||0)+d,0,f.x.logged); }
+  S.activity[trackId]=Date.now();
+  bfRefreshWeek(); save(); render();
+}
+// Regenerate the declared week in place (same mode, same size): items completed via backfill drop
+// out (their doneAt is in the past week) and the next roadmap tasks fill the freed sessions.
+function bfRefreshWeek(){ const cur=S.currentWeek; if(cur) S.currentWeek=generateWeek(cur.mode, cur, cur.planned); }
+function bfToggleDone(trackId,taskId){
+  const h=bfEntry(); const f=findTask(trackId,taskId); if(!f) return;
+  const to=!taskComplete(f.x);
+  if(setTaskDone(trackId,taskId,to)){
+    // it was finished back in THAT week, not today — otherwise the planner keeps it in this week's list
+    if(to && h) f.x.doneAt=weekStartOf(new Date(h.startISO)).getTime()+6*DAY;
+    bfRefreshWeek(); save(); render();
+  }
+}
+// Called on every render. Closes out a finished week (logs it, clears the declared week) and stamps the new baseline.
+function closeWeekIfNeeded(){
+  const key=weekKey(new Date()), b=S.weekBaseline;
+  if(b && b.key===key) return false;
+  const now=totalLogged();
+  if(b){
+    const cur=S.currentWeek;
+    const sessions=Math.max(0, now-b.total);
+    const prev=historyFor(b.key);
+    if(cur && weekKey(new Date(cur.startISO))===b.key){
+      pushHistory({startISO:cur.startISO, mode:cur.mode, planned:cur.planned, sessions:Math.max(sessions, prev?prev.sessions:0), autoRolled:true});
+      NOTICE="Week of "+fmtDate(weekStartOf(new Date(cur.startISO)))+" closed: "+sessions+" session"+(sessions===1?"":"s")+" logged ("+cur.mode+"). Declare this week below.";
+    } else if(prev){
+      if(sessions>prev.sessions){ prev.sessions=sessions; }                 // rolled early, then kept working
+    } else if(sessions>0){
+      pushHistory({startISO:parseLocalDate(b.key).toISOString(), mode:null, planned:0, sessions, autoRolled:true});
+      NOTICE="Last week wasn't declared but "+sessions+" session"+(sessions===1?"":"s")+" were logged — counted anyway. Declare this week below.";
+    }
+  }
+  // a declared week left over from a different week than the baseline (edge: imported data) — log it by its own record
+  const cur=S.currentWeek;
+  if(cur && weekKey(new Date(cur.startISO))!==key){
+    if(!historyFor(weekKey(new Date(cur.startISO)))) pushHistory({startISO:cur.startISO, mode:cur.mode, planned:cur.planned, sessions:0, autoRolled:true});
+    S.currentWeek=null;
+  } else if(cur && b && weekKey(new Date(cur.startISO))===b.key && b.key!==key){ S.currentWeek=null; }
+  S.weekBaseline={key, total:now};
+  return true;
+}
+
+/* ===================== WEEK GENERATION ===================== */
+function poolFor(group){ const k=POOLS[group]; return k?S[k]:null; }
+function poolItem(group,id){ const p=poolFor(group); return p?p.find(x=>x.id===id):null; }
+function passiveLabel(item){ return item.label+" ("+item.at+"/"+item.total+")"; }
+function keepWarmLabel(t){ return "Keep-warm on "+(t?t.name:"current track")+": re-read last commits OR one tiny scoped exercise (≤"+S.keepWarmMinutes+" min). Warmth, not progress."; }
+function isDeepTask(t,x){ return x.tier===3 || t.kind==="project"; }
+// Walk the roadmap top-down and plan `target` sessions. Items from `prev` that had sessions logged this week
+// are kept (even if now complete) so a regenerate / mode change never erases visible progress.
+function fillDeep(target, prevItems, budget){
+  const items=[]; let used=0;
+  for(const p of prevItems){
+    if(p.group!=="Deep Work") continue;
+    const f=findTask(p.trackId,p.taskId); if(!f) continue;
+    const doneThisWeek = f.x.done && f.x.doneAt && f.x.doneAt>=weekStartOf(new Date()).getTime();
+    if(f.x.logged>p.startDone || doneThisWeek){ items.push({...p, label:f.x.label, track:f.t.name, tier:f.x.tier, proves:f.x.proves}); used+=p.plan; }
+  }
+  const have=new Set(items.map(i=>i.ref));
+  for(const t of S.tracks){
+    if(t.status==="done") continue;
+    for(const x of t.tasks){
+      if(used>=target) break;
+      if(!isDeepTask(t,x) || taskComplete(x)) continue;
+      const ref=t.id+"::"+x.id;
+      if(have.has(ref)) continue;
+      const plan=Math.min(taskLeft(x), target-used);
+      items.push({ref, trackId:t.id, taskId:x.id, startDone:x.logged, plan, bonus:used>=budget, label:x.label, track:t.name, tier:x.tier, proves:x.proves, group:"Deep Work"});
+      used+=plan;
+    }
+    if(used>=target) break;
+  }
+  // present in roadmap order regardless of what was kept
+  const order=new Map(); let n=0; for(const t of S.tracks) for(const x of t.tasks) order.set(t.id+"::"+x.id, n++);
+  items.sort((a,b)=>(order.get(a.ref)??1e9)-(order.get(b.ref)??1e9));
+  return {items, used};
+}
+function nextPassive(group, exclude){
+  const pool=poolFor(group)||[];
+  for(const item of pool){ if(item.at>=item.total) continue; const ref=group+"::"+item.id; if(exclude&&exclude.has(ref)) continue; return {ref, poolName:group, poolId:item.id, label:passiveLabel(item), tier:item.tier||1, group}; }
+  return null;
+}
+function generateWeek(mode, prev, planned){
+  const prevItems=(prev&&Array.isArray(prev.items))?prev.items:[];
+  const prevByRef=new Map(prevItems.map(i=>[i.ref,i]));
+  const budget=S.budgets[mode];
+  const target=Math.max(0, planned??budget);
+  const {items}=fillDeep(target, prevItems, budget);
+  const at=activeTrack();
+  if(mode!=="DEFAULT" && at && at.status!=="done"){
+    items.push({ref:"keepwarm", keepwarm:true, trackId:at.id, label:keepWarmLabel(at), tier:2, group:"Keep-Warm"});
+  }
+  const groups = mode==="REDUCED" ? ["Certs","System Design","AI Literacy"] : mode==="FALLBACK" ? ["System Design","AI Literacy","Certs"] : [];
+  // keep any passive items the user already had (incl. ones they pulled in), then top up one per pool for the mode
+  for(const p of prevItems){ if(p.poolName && poolItem(p.poolName,p.poolId) && !items.some(i=>i.ref===p.ref)) items.push({...p, label:passiveLabel(poolItem(p.poolName,p.poolId))}); }
+  const dismissed=(prev&&Array.isArray(prev.dismissed))?prev.dismissed.filter(g=>POOLS[g]):[];
+  for(const g of groups){ if(dismissed.includes(g)) continue; if(!items.some(i=>i.poolName===g)){ const it=nextPassive(g, new Set(items.map(i=>i.ref))); if(it) items.push(it); } }
+  for(const it of items){
+    const p=prevByRef.get(it.ref);
+    if(it.keepwarm||it.poolName){ it._done=!!(p&&p._done); if(p&&typeof p._applied==="number") it._applied=p._applied; }
+  }
+  return { startISO:thisWeekStartISO(), mode, generatedAt:Date.now(), planned:target, items, dismissed };
+}
+function weekPlanned(cur){ return cur.items.filter(i=>i.group==="Deep Work").reduce((a,i)=>a+i.plan,0); }
+function syncCurrentWeek(){
+  const cur=S.currentWeek; if(!cur) return false;
+  let changed=false;
+  const keep=[];
+  cur.items.forEach(item=>{
+    if(item.trackId && item.taskId && !item.keepwarm){
+      const f=findTask(item.trackId,item.taskId); if(!f){ changed=true; return; }
+      if(item.label!==f.x.label){ item.label=f.x.label; changed=true; }
+      if(item.track!==f.t.name){ item.track=f.t.name; changed=true; }
+      if(item.tier!==f.x.tier){ item.tier=f.x.tier; changed=true; }
+      if(item.startDone>f.x.logged){ item.startDone=f.x.logged; changed=true; }     // task was un-logged below its week start
+      // finished with fewer sittings than planned this week → shrink the plan so the ring reflects reality
+      if(f.x.done){ const used=Math.max(1,f.x.logged-item.startDone); if(item.plan>used){ item.plan=used; changed=true; } }
+    } else if(item.poolName){
+      const pi=poolItem(item.poolName,item.poolId); if(!pi){ changed=true; return; }
+      const l=passiveLabel(pi); if(item.label!==l){ item.label=l; changed=true; }
+    } else if(item.keepwarm){
+      const t=S.tracks.find(x=>x.id===item.trackId); const l=keepWarmLabel(t);
+      if(item.label!==l){ item.label=l; changed=true; }
+    }
+    keep.push(item);
+  });
+  if(keep.length!==cur.items.length) cur.items=keep;
+  const planned=weekPlanned(cur); if(cur.planned!==planned){ cur.planned=planned; changed=true; }
+  return changed;
+}
+
+/* ===================== PROJECTION ===================== */
+function remainingWeeksTo(milestoneKey){
+  let sum=0;
+  for(const t of S.tracks){
+    sum += trackLeftSessions(t)/S.budgets.DEFAULT*(t.parallel??1);
+    if(t.milestone===milestoneKey) break;
+  }
+  return sum;
+}
+// Velocity = mean of (sessions logged ÷ DEFAULT budget) over the last up-to-8 COMPLETED calendar weeks,
+// counting from the first week ever logged. Weeks with no record count as 0. Provisional until 3 weeks exist.
+const VEL_WINDOW=8, VEL_MIN_LOGGED=3, VEL_FLOOR=0.15;
+function velocityWindow(){
+  const byWeek=new Map(S.history.map(w=>[weekKey(new Date(w.startISO)),w]));
+  const keys=[...byWeek.keys()].sort();
+  const out=[]; if(!keys.length) return out;
+  const first=parseLocalDate(keys[0]);
+  let d=addDays(weekStartOf(new Date()),-7);
+  while(out.length<VEL_WINDOW && d>=first){ const k=isoDay(d); out.unshift({key:k, week:byWeek.get(k)||null}); d=addDays(d,-7); }
+  return out;
+}
+function weekScore(w){ return w ? w.sessions/S.budgets.DEFAULT : 0; }
+function velocity(){
+  const win=velocityWindow();
+  const logged=win.filter(x=>x.week).length, gaps=win.length-logged;
+  if(logged<VEL_MIN_LOGGED) return {v:S.provisionalVelocity, provisional:true, n:logged, gaps, window:win.length};
+  const v=win.reduce((a,x)=>a+weekScore(x.week),0)/win.length;
+  return {v:Math.max(VEL_FLOOR,v), provisional:false, n:logged, gaps, window:win.length};
+}
+function projectDate(weeks,v){ if(!(v>0)) return null; return new Date(Date.now()+(weeks/v)*7*DAY); }
+function projection(){
+  const vel=velocity();
+  const sw=remainingWeeksTo("SOFT APPLICATIONS OPEN"), hw=remainingWeeksTo("FULL JOB-SEARCH PUSH");
+  return { ...vel, soft:{weeks:sw, date:projectDate(sw,vel.v)}, hire:{weeks:hw, date:projectDate(hw,vel.v)} };
+}
+// After 4 consecutive declared weeks well over / under budget, suggest changing the DEFAULT budget.
+function budgetNudge(){
+  const win=velocityWindow().slice(-4);
+  if(win.length<4 || !win.every(x=>x.week&&x.week.mode&&!x.week.estimated)) return null;
+  const B=S.budgets.DEFAULT;
+  if(win.every(x=>x.week.sessions>=B+2)) return {dir:"up", msg:"You've beaten your DEFAULT budget of "+B+" sessions four weeks running — that looks like your real pace. Consider raising it in Data → Budgets so the plan and the projection match reality."};
+  if(win.every(x=>x.week.mode==="DEFAULT" && x.week.sessions<=Math.max(0,B-2))) return {dir:"down", msg:"Four DEFAULT weeks in a row landed well under "+B+" sessions. Either declare REDUCED when the week is actually reduced, or lower the DEFAULT budget in Data → Budgets. Honest numbers keep the dates honest."};
+  return null;
+}
+
+/* ===================== FLAGS ===================== */
+function staleFlag(){
+  const at=activeTrack();
+  if(!at || at.status==="done") return null;
+  const last=S.activity[at.id];
+  if(!last) return null;
+  const days=Math.floor((Date.now()-last)/DAY);
+  return days>=S.thresholds.stale ? {track:at.name, days, kind:at.kind} : null;
+}
+/* The daily rep alternates between two habits, anchored on repAnchor (a DSA day):
+   quiz drill (pull → sync → quiz → answer live → commit) and one DSA problem in C#.
+   Streak/flag count a day if EITHER rep was logged — doing the "wrong" one still keeps the chain. */
+const REP={
+  drill:{ letter:"Q", name:"quiz drill", desc:"pull → sync → quiz → answer live → commit" },
+  dsa:  { letter:"D", name:"DSA problem", desc:"one problem, easy→medium, standard patterns — any language" }
+};
+function repTypeFor(d){
+  let a=parseLocalDate(S.repAnchor);
+  if(!a){ S.repAnchor=isoDay(new Date()); a=parseLocalDate(S.repAnchor); }   // self-heal (fresh seed skips normalize)
+  const n=daysBetween(parseLocalDate(isoDay(d)), a);
+  return ((n%2)+2)%2===0 ? "dsa" : "drill";
+}
+function repSet(){ return new Set([...S.drillLog, ...S.dsaLog]); }
+function repFlag(){
+  const dates=[...repSet()].map(parseLocalDate).filter(Boolean);
+  if(!dates.length) return null;
+  const last=dates.sort((a,b)=>b-a)[0];
+  const today=new Date(); today.setHours(0,0,0,0);
+  const days=daysBetween(today,last);
+  return days>=S.thresholds.drill ? {days} : null;
+}
+function repStreak(){
+  const set=repSet();
+  let n=0, d=new Date(); d.setHours(0,0,0,0);
+  if(!set.has(isoDay(d))){ d=addDays(d,-1); if(!set.has(isoDay(d))) return 0; }
+  while(set.has(isoDay(d))){ n++; d=addDays(d,-1); }
+  return n;
+}
+// Toggle the rep for one calendar day. Logs into that day's SCHEDULED habit; un-logs from
+// whichever habit holds it. The DSA solved counter follows the DSA log automatically.
+function toggleRep(ds){
+  if(S.dsaLog.includes(ds)){ S.dsaLog=S.dsaLog.filter(x=>x!==ds); S.counters.dsaSolved=Math.max(0,S.counters.dsaSolved-1); }
+  else if(S.drillLog.includes(ds)){ S.drillLog=S.drillLog.filter(x=>x!==ds); }
+  else if(repTypeFor(parseLocalDate(ds))==="dsa"){ S.dsaLog.push(ds); S.dsaLog.sort(); S.counters.dsaSolved++; }
+  else { S.drillLog.push(ds); S.drillLog.sort(); }
+}
+
+/* ===================== THEME ===================== */
+function applyAccent(){
+  const mode=S.currentWeek?S.currentWeek.mode:"DEFAULT";
+  const hex={DEFAULT:"#35D0A5",REDUCED:"#E3B341",FALLBACK:"#58A6FF"}[mode];
+  const r=document.documentElement.style;
+  r.setProperty("--accent",hex); r.setProperty("--accent-dim",hex+"22"); r.setProperty("--accent-line",hex+"5c");
+}
+
+/* ===================== CLOUD SYNC (private GitHub Gist) ===================== */
+/* Config (token + gist id) lives ONLY in this device's localStorage under its own key.
+   It is never part of S, never exported, never in this file. Paste it once per device.
+   Rules: pull before the first push in a session (never clobber a newer remote blindly);
+   last-write-wins by meta.updatedAt; localStorage remains the offline cache. */
+const SYNC_KEY="sot_journey_sync";
+const GIST_FILE="journey.json";
+const SYNC={ token:"", gistId:"", pulled:false, pushing:false, timer:null, state:"off", msg:"", lastOk:0, dirtySince:0 };
+(function loadSyncCfg(){ try{ const c=JSON.parse(localStorage.getItem(SYNC_KEY)||"{}"); SYNC.token=str(c.token,""); SYNC.gistId=str(c.gistId,""); }catch(e){} })();
+function saveSyncCfg(){ try{ localStorage.setItem(SYNC_KEY, JSON.stringify({token:SYNC.token, gistId:SYNC.gistId})); }catch(e){} }
+function syncOn(){ return !!(SYNC.token && SYNC.gistId); }
+function setSync(state,msg){ SYNC.state=state; SYNC.msg=msg||""; if(state==="ok") SYNC.lastOk=Date.now(); renderSyncPill(); }
+function gh(method,path,body,opts={}){
+  const h={ "Accept":"application/vnd.github+json", "Authorization":"Bearer "+SYNC.token, "X-GitHub-Api-Version":"2022-11-28" };
+  if(body!==undefined) h["Content-Type"]="application/json";
+  return fetch("https://api.github.com"+path,{ method, headers:h, body:body===undefined?undefined:JSON.stringify(body), keepalive:!!opts.keepalive })
+    .then(async r=>{ if(!r.ok){ const t=await r.text().catch(()=>""); const e=new Error("GitHub "+r.status+(t?": "+t.slice(0,140):"")); e.status=r.status; throw e; } return r.status===204?null:r.json(); });
+}
+async function gistRead(){
+  const g=await gh("GET","/gists/"+encodeURIComponent(SYNC.gistId));
+  const f=g&&g.files&&g.files[GIST_FILE]; if(!f) return null;               // gist exists but no journey yet
+  let content=f.content; if(f.truncated && f.raw_url){ content=await fetch(f.raw_url).then(r=>r.text()); }
+  if(!content||!content.trim()) return null;
+  return JSON.parse(content);
+}
+function gistWrite(state,opts){ return gh("PATCH","/gists/"+encodeURIComponent(SYNC.gistId),{files:{[GIST_FILE]:{content:JSON.stringify(state)}}},opts); }
+async function gistCreate(state){ const g=await gh("POST","/gists",{description:"Full-Stack Journey tracker data (private)", public:false, files:{[GIST_FILE]:{content:JSON.stringify(state)}}}); return g.id; }
+
+// Pull: adopt remote if it is newer (or local is fresh); otherwise mark local as needing a push.
+async function syncPull(reason){
+  if(!syncOn()) return;
+  if(!SAFE_TO_SAVE){ setSync("warn","local data unloadable — sync paused (fix in Data tab)"); return; }
+  setSync("busy","syncing…");
+  try{
+    const remoteRaw=await gistRead();
+    SYNC.pulled=true;
+    if(remoteRaw){
+      const remote=migrate(remoteRaw);                       // throws if it isn't valid journey data
+      const rt=remote.meta.updatedAt||0, lt=S.meta.updatedAt||0;
+      if(rt>lt){
+        S=remote; OPEN.clear();
+        try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+        setSync("ok","synced · pulled newer data"); render(); return;
+      }
+      if(rt<lt){ schedulePush(0); return; }              // local is newer → push it
+      setSync("ok","synced"); return;
+    }
+    schedulePush(0);                                       // nothing remote yet → seed it with local
+  }catch(e){
+    console.warn("sync pull failed",e);
+    if(e.status===401||e.status===403) setSync("err","token rejected — check Data tab");
+    else if(e.status===404) setSync("err","gist not found — check the id");
+    else setSync("err","offline / sync failed — will retry");
+  }
+}
+function schedulePush(delay=1500){
+  if(!syncOn()||!SAFE_TO_SAVE) return;
+  SYNC.dirtySince=SYNC.dirtySince||Date.now();
+  if(SYNC.state!=="busy") setSync("dirty","unsynced changes…");
+  clearTimeout(SYNC.timer); SYNC.timer=setTimeout(()=>syncPush(),delay);
+}
+async function syncPush(opts={}){
+  if(!syncOn()||!SAFE_TO_SAVE) return;
+  if(!SYNC.pulled){ await syncPull("before-push"); if(!SYNC.pulled) return; }   // never push blind
+  if(SYNC.pushing){ schedulePush(1500); return; }
+  SYNC.pushing=true; const stamp=S.meta.updatedAt; setSync("busy","syncing…");
+  try{ await gistWrite(S,opts); SYNC.dirtySince=0; setSync("ok","synced"); if(S.meta.updatedAt!==stamp) schedulePush(500); }
+  catch(e){ console.warn("sync push failed",e); setSync(e.status===401||e.status===403?"err":"err", e.status===401||e.status===403?"token rejected — check Data tab":"offline / sync failed — will retry"); }
+  finally{ SYNC.pushing=false; }
+}
+function syncFlushNow(){ if(syncOn()&&SAFE_TO_SAVE&&SYNC.dirtySince&&SYNC.pulled&&!SYNC.pushing){ clearTimeout(SYNC.timer); syncPush({keepalive:true}); } }
+function fmtAgo(ts){ if(!ts) return ""; const s=Math.round((Date.now()-ts)/1000); if(s<60) return "just now"; const m=Math.round(s/60); if(m<60) return m+"m ago"; const h=Math.round(m/60); return h<48?h+"h ago":Math.round(h/24)+"d ago"; }
+function renderSyncPill(){
+  const p=document.getElementById("syncPill"); if(!p) return;
+  if(!syncOn()){ p.className="syncpill off"; p.textContent="sync off · local only"; p.title="Set up cloud sync in the Data tab"; }
+  else{
+    const label={ok:"synced"+(SYNC.lastOk?" · "+fmtAgo(SYNC.lastOk):""), busy:"syncing…", dirty:"unsynced changes…", err:SYNC.msg||"sync error", warn:SYNC.msg||"sync paused", off:"sync off"}[SYNC.state]||SYNC.state;
+    p.className="syncpill "+SYNC.state; p.textContent=label; p.title=SYNC.msg||label;
+  }
+  const s=document.getElementById("syncStatusLine"); if(s) s.textContent=syncOn()?("Status: "+(SYNC.msg||SYNC.state)+(SYNC.lastOk?" · last OK "+fmtAgo(SYNC.lastOk):"")):"Status: not configured on this device.";
+}
+function syncPanel(){
+  const p=el("div","panel");
+  p.innerHTML=`<h2>Cloud sync · private GitHub Gist</h2><p class="sub">Keeps every device on the same data. Your token and gist id are stored <b>only in this browser</b> — never in the exported JSON, never in the app file. Set this up once per device (see README).</p>`;
+  const f1=el("div","field"); f1.innerHTML=`<label>GitHub token (needs the <span class="mono">gist</span> permission)</label>`; const ti=el("input"); ti.type="password"; ti.autocomplete="off"; ti.spellcheck=false; ti.placeholder="github_pat_… or ghp_…"; ti.value=SYNC.token; f1.appendChild(ti);
+  const f2=el("div","field"); f2.innerHTML=`<label>Gist id (leave empty on your first device and click "Create new gist")</label>`; const gi=el("input"); gi.autocomplete="off"; gi.spellcheck=false; gi.placeholder="e.g. 3f2c9a1b…"; gi.value=SYNC.gistId; f2.appendChild(gi);
+  p.append(f1,f2);
+  const status=el("div","muted-note"); status.id="syncStatusLine"; status.style.marginBottom="12px"; p.appendChild(status);
+  const row=el("div","row");
+  const connect=el("button","btn pri"); connect.textContent="Save & sync now";
+  connect.onclick=async()=>{
+    const tok=ti.value.trim(), id=gi.value.trim().replace(/^https?:\/\/gist\.github\.com\/[^/]+\//,"").replace(/^https?:\/\/gist\.github\.com\//,"").split(/[/?#]/)[0];
+    if(!tok){ toast("Paste your GitHub token first."); return; }
+    if(!id){ toast("Paste the gist id, or click \"Create new gist\" if this is your first device."); return; }
+    SYNC.token=tok; SYNC.gistId=id; SYNC.pulled=false; saveSyncCfg(); renderSyncPill(); gi.value=id;
+    await syncPull("manual");
+    if(SYNC.state==="err") toast("Sync failed: "+SYNC.msg);
+  };
+  const create=el("button","btn"); create.textContent="Create new gist";
+  const doCreate=async()=>{
+    const tok=ti.value.trim(); if(!tok){ toast("Paste your GitHub token first."); return; }
+    SYNC.token=tok; setSync("busy","creating gist…");
+    try{ const id=await gistCreate(S); SYNC.gistId=id; SYNC.pulled=true; saveSyncCfg(); gi.value=id; setSync("ok","synced · gist created"); toast("Gist created.\n\nGist id: "+id+"\n\nOn your other devices paste the same token AND this id, then click \"Save & sync now\"."); }
+    catch(e){ console.warn(e); setSync("err", e.status===401||e.status===403?"token rejected — needs gist permission":"could not create gist: "+(e.message||"")); toast("Could not create the gist. "+(SYNC.msg||"")); }
+    saveSyncCfg();
+  };
+  create.onclick=()=>{ if(gi.value.trim()) arm(create,"A gist id is set — create another anyway?",doCreate); else doCreate(); };
+  const pull=el("button","btn ghost"); pull.textContent="Pull from cloud";
+  const doPullOverUnloadable=async()=>{
+      try{ const raw=await gistRead(); if(!raw){ toast("The gist has no journey data yet."); return; } S=migrate(raw); SAFE_TO_SAVE=true; LOAD_ERROR=null; OPEN.clear(); SYNC.pulled=true; save(); render(); setSync("ok","synced · restored from cloud"); }
+      catch(e){ toast("Pull failed: "+(e.message||e)); }
+  };
+  pull.onclick=async()=>{
+    if(!syncOn()){ toast("Save a token and gist id first."); return; }
+    if(!SAFE_TO_SAVE){ arm(pull,"Replace unloadable local data with cloud copy?",doPullOverUnloadable); return; }
+    SYNC.pulled=false; await syncPull("manual"); if(SYNC.state==="err") toast("Sync failed: "+SYNC.msg);
+  };
+  const off=el("button","btn ghost"); off.textContent="Disconnect this device"; off.style.marginLeft="auto";
+  off.title="Forget the token and gist id on this device. Your local data stays; the gist is not deleted.";
+  off.onclick=()=>arm(off,"Click again to disconnect",()=>{ SYNC.token=""; SYNC.gistId=""; SYNC.pulled=false; SYNC.dirtySince=0; clearTimeout(SYNC.timer); saveSyncCfg(); ti.value=""; gi.value=""; setSync("off",""); });
+  row.append(connect,create,pull,off); p.appendChild(row);
+  const hint=el("div","hint"); hint.innerHTML=`<b>How it behaves:</b> on open (and whenever you return to the tab) it pulls; the newer copy wins by timestamp. Every change is saved locally at once and pushed ~1.5 s later. Offline it just keeps working from this browser and catches up next time. Use one device at a time to avoid overwriting yourself.`;
+  p.appendChild(hint);
+  renderSyncPill();
+  return p;
+}
+
+
+
+/* ===================== RENDER ===================== */
+let TAB="week";
+function render(){
+  let dirty=false;
+  if(closeWeekIfNeeded()) dirty=true;
+  if(reconcileStatus()) dirty=true;
+  if(syncCurrentWeek()) dirty=true;
+  if(dirty) save(false);
+  applyAccent(); document.documentElement.style.setProperty("--fs", String(S.ui.textScale)); renderTop(); renderReadouts(); renderSyncPill();
+  const v=document.getElementById("view"); v.innerHTML="";
+  v.appendChild(({week:viewWeek,roadmap:viewRoadmap,projection:viewProjection,threads:viewThreads,data:viewData}[TAB]||viewWeek)());
+  if(BF){ const mm=backfillModal(); if(mm) v.appendChild(mm); }
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.tab===TAB));
+}
+function renderTop(){ document.getElementById("brandWho").textContent=S.profile.name+" · "+S.profile.position; }
+function renderReadouts(){
+  const pj=projection(), wrap=document.getElementById("readouts"); wrap.innerHTML="";
+  const cur=S.currentWeek, ws=weekSessions();
+  [
+    {k:"Journey Week", v:"W"+journeyWeek()},
+    {k:"Phase", v:esc(activeTrack().name.replace(/^Project \d+ · /,"")), small:true},
+    {k:"Soft Apps", v:softLabel(pj.soft.date), hl:true},
+    {k:"Full Push", v:softLabel(pj.hire.date)},
+    {k:"Daily Rep", v:repStreak()+"d"},
+    {k:"Sessions · wk", v:cur?ws+"/"+cur.planned:String(ws)}
+  ].forEach(r=>{ const d=el("div","ro"+(r.hl?" hl":"")); d.innerHTML=`<div class="k">${r.k}</div><div class="v">${r.small?'<small>'+r.v+'</small>':r.v}</div>`; wrap.appendChild(d); });
+}
+function renderFlags(){
+  const box=el("div","flags"); let any=false;
+  const sf=staleFlag();
+  if(sf){ any=true; const f=el("div","flag");
+    const what = sf.kind==="project" ? "A half-built project going cold is worse than a paused course." : "That's productive procrastination — log one session or a keep-warm touch this week even in a low mode.";
+    f.innerHTML=`<div class="fi">Flag</div><div class="ft"><b>${esc(sf.track)}</b> untouched for <b>${sf.days} days.</b> ${what}</div>`; box.appendChild(f); }
+  const df=repFlag();
+  if(df){ any=true; const t=repTypeFor(new Date()); const f=el("div","flag");
+    f.innerHTML=`<div class="fi">Rep</div><div class="ft">No daily rep logged in <b>${df.days} days.</b> The daily loop is the habit that compounds — today is a <b>${REP[t].name}</b> day: ${esc(REP[t].desc)}.</div>`; box.appendChild(f); }
+  return any?box:null;
+}
+
+/* ---------- shared session row (week + roadmap) ---------- */
+// One row per task.
+//   click the row      → log one sitting (effort). Never marks anything done.
+//   "–"                → undo one sitting (mistake-proofing).
+//   ✓ done / reopen    → the SECTION is finished (or not). This — and only this — turns the box green.
+//   "+plan"            → this section will need one more sitting than estimated (planning only).
+function sessionRow(x, t, opts={}){
+  const complete=taskComplete(x);
+  const r=el("div","task"+(complete?" done":""));
+  const chk=el("div","chk"); chk.title=complete?"Reopen this task":"Mark this section finished";
+  chk.innerHTML='<svg viewBox="0 0 12 12"><path d="M1 6l3.5 3.5L11 2" fill="none" stroke="#06231b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  chk.onclick=e=>{ e.stopPropagation(); if(setTaskDone(t.id,x.id,!complete)){ topUpWeek(); save(); render(); } };
+  const tl=el("div","tl");
+  const tier=[1,2,3].includes(x.tier)?`<span class="tag t${x.tier}">T${x.tier}</span>`:"";
+  const proves=x.proves?`<span class="tag proves">proves: ${esc(x.proves)}</span>`:"";
+  const trk=opts.showTrack&&t?`<span>${esc(t.name)}</span>`:"";
+  const plan=opts.plan?`<span class="tag plan">${opts.bonus?"bonus · ":""}${opts.plan} this wk</span>`:"";
+  const atEst=!complete && x.logged>=x.est;
+  const sess = complete
+    ? `<span class="sess">done · ${x.logged} sess</span>`
+    : `<span class="sess">${x.logged}/${x.est} sess</span>`;
+  const bar=(!complete && x.est>1)?`<span class="sbar"><i style="width:${Math.min(100,Math.round(x.logged/x.est*100))}%"></i></span>`:"";
+  const nudge=atEst?`<span class="tag warn">estimate used — ✓ done if finished, +plan if not</span>`:"";
+  const sec=x.section?`<div class="sec">${esc(x.section)}</div>`:"";
+  const dw=x.doneWhen?`<div class="dw"><b>done when</b>${esc(x.doneWhen)}</div>`:"";
+  tl.innerHTML=`${sec}<div class="tt">${esc(x.label)}</div><div class="meta">${tier}${trk}${sess}${bar}${nudge}${plan}${proves}</div>${dw}`;
+  const acts=el("div","sacts");
+  const minus=el("button","sbtn"); minus.textContent="–"; minus.title="undo one logged sitting"; minus.disabled=x.logged<=0;
+  minus.onclick=e=>{ e.stopPropagation(); if(logSession(t.id,x.id,-1)){ save(); render(); } };
+  const more=el("button","sbtn"); more.textContent="+plan"; more.title="estimate one more sitting for this section (now "+x.est+")"; more.disabled=complete;
+  more.onclick=e=>{ e.stopPropagation(); if(setTaskPlan(t.id,x.id,x.est+1)){ save(); render(); } };
+  const less=el("button","sbtn"); less.textContent="−plan"; less.title="estimate one sitting less (undo +plan)"; less.disabled=complete||x.est<=1;
+  less.onclick=e=>{ e.stopPropagation(); if(setTaskPlan(t.id,x.id,x.est-1)){ save(); render(); } };
+  const dn=el("button","sbtn"+(complete?"":" ok")); dn.textContent=complete?"reopen":"✓ done";
+  dn.title=complete?"Not actually finished — reopen it":"The section is finished (see \u201cdone when\u201d)";
+  dn.onclick=e=>{ e.stopPropagation(); if(setTaskDone(t.id,x.id,!complete)){ topUpWeek(); save(); render(); } };
+  acts.append(minus,more,less,dn);
+  r.append(chk,tl,acts);
+  r.title=complete?"Finished. Click \u201creopen\u201d if that was a mistake.":"Click to log one sitting on this section";
+  r.onclick=()=>{ if(complete) return; if(logSession(t.id,x.id,+1)){ save(); render(); } };
+  return r;
+}
+function taskRow(it,onclick,onremove){
+  const pi=it.poolName?poolItem(it.poolName,it.poolId):null;
+  const complete=pi?pi.at>=pi.total:!!it._done;
+  const touched=pi?(it._applied||0)>0:false;
+  const r=el("div","task"+(complete?" done":"")+(touched&&!complete?" touched":""));
+  const chk=el("div","chk"); chk.innerHTML='<svg viewBox="0 0 12 12"><path d="M1 6l3.5 3.5L11 2" fill="none" stroke="#06231b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const tl=el("div","tl");
+  const tier=[1,2,3].includes(it.tier)?`<span class="tag t${it.tier}">T${it.tier}</span>`:"";
+  const wk=pi?`<span class="sess">${pi.at}/${pi.total} units</span>${(it._applied||0)>0?`<span class="tag plan">+${it._applied} this wk</span>`:""}`:"";
+  const label=pi?pi.label:it.label;
+  tl.innerHTML=`<div class="tt">${esc(label)}</div><div class="meta">${tier}${wk}</div>`;
+  r.appendChild(chk); r.appendChild(tl);
+  if(pi||onremove){
+    const acts=el("div","sacts");
+    if(pi){ const minus=el("button","sbtn"); minus.textContent="–"; minus.title="undo one unit logged this week"; minus.disabled=(it._applied||0)<=0; minus.onclick=e=>{ e.stopPropagation(); logPoolUnit(it,-1); }; acts.appendChild(minus); }
+    if(onremove){ const x=el("button","sbtn"); x.textContent="× remove"; x.title="Take this item out of the week (gives back any units it logged)"; x.onclick=e=>{ e.stopPropagation(); onremove(); }; acts.appendChild(x); }
+    r.appendChild(acts);
+  }
+  r.title=pi?(complete?"Complete.":"Click to log one unit (a video, a chapter, a module)"):"";
+  r.onclick=()=>{ if(pi&&complete) return; onclick(); };
+  return r;
+}
+/* ---------- THIS WEEK ---------- */
+function viewWeek(){
+  const box=el("div");
+  const flags=renderFlags(); if(flags) box.appendChild(flags);
+  if(NOTICE){ const n=el("div","hint"); n.style.margin="0 0 16px"; n.textContent=NOTICE; box.appendChild(n); }
+  const nudge=budgetNudge(); if(nudge){ const n=el("div","hint"); n.style.margin="0 0 16px"; n.innerHTML=`<b>Pace check:</b> ${esc(nudge.msg)}`; box.appendChild(n); }
+
+  const cur=S.currentWeek, B=S.budgets;
+  const p=el("div","panel");
+  p.innerHTML=`<div class="mode-head"><div class="lead">Declare the week</div><div class="wk">week of ${fmtDate(weekStartOf(new Date()))}</div></div>`;
+  const modes=el("div","modes");
+  const h=S.sessionHours;
+  [
+    {m:"DEFAULT",cap:B.DEFAULT+" sessions · ~"+Math.round(B.DEFAULT*h)+"h",desc:"A normal week: two weeknights + one weekend block. Advance the course / build the project. The floor, not the ceiling — pull more if you finish early."},
+    {m:"REDUCED",cap:B.REDUCED+" session"+(B.REDUCED===1?"":"s")+" · ~"+Math.round(B.REDUCED*h)+"h",desc:"Busy week. Keep the active track warm with a real session or two; fill fragments with certs and reading."},
+    {m:"FALLBACK",cap:B.FALLBACK+" sessions · ~30–60 min",desc:"No capacity. One keep-warm touch so the thread doesn't snap, maybe a video. Continuity, not progress."}
+  ].forEach(o=>{
+    const b=el("button","mode"+(cur&&cur.mode===o.m?" on":"")); b.dataset.m=o.m;
+    b.innerHTML=`<div class="mname"><span class="swatch"></span>${o.m}</div><div class="cap">${o.cap}</div><div class="desc">${o.desc}</div>`;
+    b.onclick=()=>declareWeek(o.m); modes.appendChild(b);
+  });
+  p.appendChild(modes); box.appendChild(p);
+
+  if(!cur){
+    const e=el("div","panel"); e.innerHTML=`<h2>No week planned yet</h2><p class="sub">Pick a mode above and the week generates from exactly where you are — the next sessions on the roadmap, plus the right passive tracks. Sessions you log before declaring still count. The daily rep is always below.</p>`;
+    box.appendChild(e); box.appendChild(drillPanel()); return box;
+  }
+
+  const list=el("div","panel");
+  const ws=weekSessions(), planned=cur.planned;
+  const pct=planned?Math.round(ws/planned*100):(ws?100:0);
+  list.innerHTML=`<div class="mode-head"><div><h2>This week · <span class="mono" style="color:var(--accent)">${cur.mode}</span></h2><p class="sub" style="margin:2px 0 0">Click a task after each sitting to log it (that is your effort). Tick the box / <b>✓ done</b> only when the section is actually finished — see its <i>done when</i>. The week closes itself Sunday night, or roll it now.</p></div></div>`;
+  const prog=el("div","wkprog");
+  prog.innerHTML=`<div class="ring" style="--p:${Math.min(100,pct)}"><i>${pct}%</i></div><div class="lab"><b>${ws}/${planned}</b> sessions logged · <b>~${Math.round(planned*S.sessionHours)}h</b> planned${ws>planned?" · <b style='color:var(--accent)'>+"+(ws-planned)+" bonus</b>":""}</div>`;
+  list.appendChild(prog);
+
+  const deep=cur.items.filter(i=>i.group==="Deep Work");
+  const gt=el("div","grouptitle"); gt.innerHTML=`<span>Deep Work</span><span class="bar"></span><span class="cnt">${deep.filter(i=>{const f=findTask(i.trackId,i.taskId); return f&&taskComplete(f.x);}).length}/${deep.length} sections finished</span>`;
+  list.appendChild(gt);
+  if(!deep.length && planned===0){ const n=el("div","muted-note"); n.style.margin="4px 2px 12px"; n.textContent=cur.mode==="FALLBACK"?"No deep sessions planned in FALLBACK. Pull one below if you find the energy.":"Nothing left to schedule — every deep-work task is complete."; list.appendChild(n); }
+  deep.forEach(i=>{ const f=findTask(i.trackId,i.taskId); if(f) list.appendChild(sessionRow(f.x,f.t,{showTrack:true, plan:i.plan, bonus:i.bonus})); });
+  const pullRow=el("div","row"); pullRow.style.margin="10px 2px 4px";
+  const pull=el("button","btn sm"); pull.textContent="Pull next →"; pull.title="Plan one more session from the roadmap";
+  pull.onclick=()=>{ if(planned+1>S.softCap) arm(pull,"Past soft cap ("+S.softCap+") — pull anyway?",pullNext); else pullNext(); };
+  const pn=el("span","muted-note"); pn.textContent=planned>=S.softCap?"You're at "+planned+" planned sessions — past your "+S.softCap+"-session soft cap. A sustainable pace beats a heroic week followed by a dead one.":"Finished early? Pull the next session in. Everything you log counts toward velocity.";
+  pullRow.append(pull,pn); list.appendChild(pullRow);
+
+  const other=[...new Set(cur.items.filter(i=>i.group!=="Deep Work").map(i=>i.group))];
+  other.forEach(g=>{
+    const inG=cur.items.filter(i=>i.group===g);
+    const t2=el("div","grouptitle"); const units=inG.reduce((a,i)=>a+Math.max(0,i._applied||0),0); t2.innerHTML=`<span>${esc(g)}</span><span class="bar"></span><span class="cnt">${POOLS[g]?units+" unit"+(units===1?"":"s")+" this wk":inG.filter(i=>i._done).length+"/"+inG.length}</span>`;
+    list.appendChild(t2); inG.forEach(it=>list.appendChild(taskRow(it,()=>toggleWeekItem(it), it.poolName?()=>removeWeekItem(it):null)));
+    if(POOLS[g]){ const hnt=el("div","muted-note"); hnt.style.margin="4px 2px 0"; hnt.textContent="click = one unit (a video / chapter / module), \u201c–\u201d undoes; totals also editable in the Threads tab"; list.appendChild(hnt); }
+  });
+  const passRow=el("div","row"); passRow.style.margin="14px 2px 0";
+  const lab=el("span","muted-note"); lab.textContent="Add a passive item:"; passRow.appendChild(lab);
+  Object.keys(POOLS).forEach(g=>{ const b=el("button","btn sm ghost"); b.textContent="+ "+g; b.onclick=()=>pullPassive(g); passRow.appendChild(b); });
+  list.appendChild(passRow);
+
+  const act=el("div","row"); act.style.marginTop="20px";
+  const roll=el("button","btn pri"); roll.textContent="Roll week over →"; roll.title="Log this week now and clear it. It closes itself Sunday night anyway — only roll if you're done for the week.";
+  roll.onclick=()=>arm(roll,"Click again to roll ("+ws+" sess)",rollWeek);
+  const regen=el("button","btn ghost"); regen.textContent="Regenerate"; regen.title="Re-pull the next tasks for this mode. Sessions you've logged are kept.";
+  regen.onclick=()=>{ const beforeRefs=cur.items.map(i=>i.ref).join("|"); S.currentWeek=generateWeek(cur.mode, cur, Math.max(S.budgets[cur.mode], cur.planned)); save(); render(); const n=S.currentWeek.items.filter(i=>i.group==="Deep Work").length; toast(S.currentWeek.items.map(i=>i.ref).join("|")===beforeRefs?"Regenerated — the week already had the next "+n+" tasks in order, so nothing changed.":"Regenerated — "+n+" deep-work tasks planned. Sessions you logged are kept."); };
+  act.append(roll,regen); list.appendChild(act);
+  box.appendChild(list);
+  box.appendChild(drillPanel());
+  return box;
+}
+function drillPanel(){
+  const p=el("div","panel");
+  const set=repSet(); const start=weekStartOf(new Date()); const today=isoDay(new Date());
+  const days=[...Array(7)].map((_,i)=>addDays(start,i));
+  const doneThisWk=days.filter(d=>set.has(isoDay(d))).length;
+  const tt=repTypeFor(new Date());
+  p.innerHTML=`<div class="mode-head"><div><h2>Daily Rep · <span class="mono" style="color:var(--accent)">${REP[tt].letter}</span> today</h2><p class="sub" style="margin:2px 0 0">Alternates daily — <b>Q</b> quiz drill (${REP.drill.desc}) · <b>D</b> ${REP.dsa.name} (${REP.dsa.desc}). Today: <b>${REP[tt].name}</b> · streak ${repStreak()} day(s)</p></div><div class="wk">DSA ${S.counters.dsaSolved}/${S.dsaTarget} · ${doneThisWk}/7 this week</div></div>`;
+  const row=el("div","drill");
+  days.forEach(d=>{
+    const ds=isoDay(d), sched=repTypeFor(d);
+    const logged = S.dsaLog.includes(ds) ? "dsa" : (S.drillLog.includes(ds) ? "drill" : null);
+    const c=el("button","dcell"+(logged?" on":"")+(ds===today?" today":""));
+    c.textContent=REP[logged||sched].letter;
+    c.title=fmtDate(d)+" · scheduled: "+REP[sched].name+(logged?" · logged: "+REP[logged].name:"");
+    c.onclick=()=>{ toggleRep(ds); save(); render(); };
+    row.appendChild(c);
+  });
+  p.appendChild(row);
+  const b=el("button","btn"); b.style.marginTop="12px";
+  b.textContent=set.has(today)?"Today logged ✓":"Log today's "+REP[tt].name;
+  b.onclick=()=>{ if(!set.has(today)){ toggleRep(today); save(); render(); } };
+  p.appendChild(b);
+  return p;
+}
+
+/* ---------- ROADMAP ---------- */
+function viewRoadmap(){
+  const box=el("div");
+  const intro=el("div","panel");
+  intro.innerHTML=`<h2>The spine</h2><p class="sub">Coursework phases and projects in build order — course tracks follow the course's own section order. Each task shows its <b>§ section</b>, an <b>estimate</b> in sittings (one sitting ≈ ${S.sessionHours}h — a guess, not a rule) and a <b>done when</b>. Click a task to log a sitting, "–" to undo, "+plan" / "−plan" to adjust the estimate, <b>✓ done</b> when the section is finished. Logging here also counts toward this week.</p>`;
+  box.appendChild(intro);
+  const p=el("div","panel");
+  S.tracks.forEach((t,i)=>{
+    const prog=Math.round(trackProgress(t)*100);
+    const tr=el("div","track"+(OPEN.has(t.id)?" open":""));
+    const th=el("div","th");
+    const ms=t.milestone?`<span class="pill ms">${esc(t.milestone)}</span>`:"";
+    th.innerHTML=`<div class="idx mono">${String(i+1).padStart(2,"0")}</div>
+      <div class="tn"><div class="nm">${esc(t.name)} <span class="pill ${t.status}">${t.status}</span> ${ms}</div>
+      <div class="dl">${esc(t.detail)} · ${trackDoneSessions(t)}/${trackSessions(t)} sessions · ≈${trackWeeks(t).toFixed(1)} wk${t.parallel!==1?" · ∥"+t.parallel:""}</div></div>
+      <div class="mini"><div class="bar"><i style="width:${prog}%"></i></div><div class="pct">${prog}%</div></div>`;
+    th.onclick=()=>{ if(OPEN.has(t.id)) OPEN.delete(t.id); else OPEN.add(t.id); render(); };
+    tr.appendChild(th);
+    const body=el("div","body");
+    t.tasks.forEach(x=>body.appendChild(sessionRow(x,t)));
+    const ee=el("div","effort-edit");
+    ee.innerHTML=`${trackLeftSessions(t)} sessions left · ≈${(trackLeftSessions(t)/S.budgets.DEFAULT*(t.parallel??1)).toFixed(1)} DEFAULT-weeks &nbsp; ∥ <input type="number" step="0.1" min="0" max="1" value="${t.parallel??1}"> <span class="muted-note">(fraction counted while overlapping)</span>`;
+    const pi=ee.querySelector("input");
+    pi.onchange=()=>{ const v=parseFloat(pi.value); if(Number.isFinite(v)) t.parallel=clamp(v,0,1); save(); render(); };
+    body.appendChild(ee); tr.appendChild(body); p.appendChild(tr);
+  });
+  box.appendChild(p); return box;
+}
+
+/* ---------- PROJECTION ---------- */
+function viewProjection(){
+  const pj=projection(), box=el("div"), B=S.budgets.DEFAULT;
+  const p=el("div","panel");
+  p.innerHTML=`<h2>Live projection</h2><p class="sub">Computed from the sessions left on the roadmap and the sessions you've actually logged — not a fixed date. Log truthfully and it tells the truth.</p>`;
+  const dates=el("div","proj-dates");
+  dates.innerHTML=`<div class="pdate soft"><div class="k">Soft applications open</div><div class="d">${softLabel(pj.soft.date)}</div><div class="note">NFC Platform ships · ${pj.soft.weeks.toFixed(1)} DEFAULT-weeks left</div></div>
+    <div class="pdate"><div class="k">Full job-search push</div><div class="d">${softLabel(pj.hire.date)}</div><div class="note">after AI Avatar · ${pj.hire.weeks.toFixed(1)} DEFAULT-weeks left · hiring can land in between</div></div>`;
+  p.appendChild(dates);
+  const basis = pj.provisional
+    ? `provisional (${pj.n} of ${VEL_MIN_LOGGED} wks logged)`
+    : `measured · last ${pj.window} wks${pj.gaps?` · ${pj.gaps} gap${pj.gaps>1?"s":""} counted as 0`:""}`;
+  const vel=el("div","vel");
+  vel.innerHTML=`<div><div class="k">Effective velocity</div><div class="v" style="color:var(--accent)">${pj.v.toFixed(2)}<span style="font-size:calc(12px*var(--fs));color:var(--muted)"> ×</span></div></div>
+    <div><div class="k">Basis</div><div class="v" style="font-size:calc(14px*var(--fs))">${basis}</div></div>
+    <div><div class="k">1.0 =</div><div class="v" style="font-size:calc(14px*var(--fs))">${B} sessions / week (~${Math.round(B*S.sessionHours)}h)</div></div>`;
+  p.appendChild(vel);
+  const note=el("div","hint");
+  note.innerHTML=`<b>How to read this:</b> each completed week scores <b>sessions logged ÷ ${B}</b>, so a ${B}-session week is 1.0 and a ${B+2}-session week is ${((B+2)/B).toFixed(2)}. Velocity is the average over the last up-to-${VEL_WINDOW} completed calendar weeks. Weeks with nothing logged count as <b>0</b>, so skipping moves dates later, never earlier. Two levers pull dates in: log more sessions, or cut scope (fewer sessions on the roadmap). Until ${VEL_MIN_LOGGED} weeks exist it uses a provisional ${S.provisionalVelocity}.`;
+  p.appendChild(note); box.appendChild(p);
+
+  const h=el("div","panel");
+  h.innerHTML=`<h2>Week log</h2><p class="sub">Every calendar week since your first, coloured by declared mode; hover for sessions. Grey = nothing logged (counts as 0). Outlined = current.</p>`;
+  const strip=el("div","strip");
+  const byWeek=new Map(S.history.map(w=>[weekKey(new Date(w.startISO)),w]));
+  const keys=[...byWeek.keys()].sort();
+  const thisKey=weekKey(new Date());
+  if(!keys.length && !S.currentWeek) strip.innerHTML=`<div class="muted-note">No weeks logged yet.</div>`;
+  else{
+    let d=keys.length?parseLocalDate(keys[0]):weekStartOf(new Date());
+    const end=weekStartOf(new Date());
+    let guard=0;
+    while(d<=end && guard++<520){
+      const k=isoDay(d), w=byWeek.get(k), isNow=k===thisKey;
+      const c=el("div","cell");
+      if(isNow){ c.className="cell now"+(S.currentWeek?" "+S.currentWeek.mode:""); c.title="current · "+(S.currentWeek?S.currentWeek.mode:"not declared")+" · "+weekSessions()+" sessions so far"; }
+      else if(w){ c.className="cell "+(w.mode||"logged"); c.title=fmtDate(d)+" · "+(w.mode||"undeclared")+" · "+w.sessions+" session"+(w.sessions===1?"":"s")+(w.estimated?" (estimated)":"")+(w.autoRolled?" · auto":""); }
+      else c.title=fmtDate(d)+" · nothing logged · counts as 0";
+      strip.appendChild(c); d=addDays(d,7);
+    }
+  }
+  h.appendChild(strip);
+  const lg=el("div","legend");
+  lg.innerHTML=`<span><i style="background:var(--mode-default)"></i>Default</span><span><i style="background:var(--mode-reduced)"></i>Reduced</span><span><i style="background:var(--mode-fallback)"></i>Fallback</span><span><i style="background:var(--muted-2)"></i>Undeclared, logged</span><span><i style="background:var(--line)"></i>Gap</span>`;
+  h.appendChild(lg); box.appendChild(h); return box;
+}
+
+/* ---------- THREADS ---------- */
+function viewThreads(){
+  const box=el("div");
+  const p=el("div","panel");
+  p.innerHTML=`<h2>Always-on threads</h2><p class="sub">The background hum that compounds. Mostly Tier-1 — they ride alongside every mode. Cert courses and reading tracks hold partial progress.</p>`;
+  [["commits","GitHub commits","every study session"],["blogPosts","Blog posts","1/month + 1 per project"],["dsaSolved","DSA problems solved","every other day · target "+S.dsaTarget+" · logging a D-day counts one automatically; bump here for extras"]].forEach(([k,nm,cad])=>{
+    const t=el("div","thread"); t.innerHTML=`<div class="ti"><div class="nm">${nm}</div><div class="cad">${cad}</div></div>`;
+    const c=el("div","counter");
+    const m=el("button"); m.textContent="–"; m.onclick=()=>{ S.counters[k]=Math.max(0,S.counters[k]-1); save(); render(); };
+    const nn=el("span","num"); nn.textContent=S.counters[k];
+    const pl=el("button"); pl.textContent="+"; pl.onclick=()=>{ S.counters[k]++; save(); render(); };
+    c.append(m,nn,pl); t.appendChild(c); p.appendChild(t);
+  });
+  box.appendChild(p);
+  box.appendChild(poolPanel("Cloud Certifications","certs","Passive Tier-1/2 — ideal filler for Reduced & Fallback weeks. Progress by unit.",true));
+  box.appendChild(poolPanel("System Design","sysDesign","Hussein Nasser → systemdesignschool.io → Alex Xu Vol.1.",false));
+  box.appendChild(poolPanel("AI & LLM Literacy","aiLiteracy","Foundations → applied → workflow. Integrate AI; don't become an ML engineer.",false));
+  return box;
+}
+function poolPanel(title,key,sub,showTier){
+  const pool=S[key], p=el("div","panel");
+  const complete=pool.filter(x=>x.at>=x.total).length;
+  p.innerHTML=`<div class="mode-head"><div><h2>${title}</h2><p class="sub" style="margin:2px 0 0">${sub}</p></div><div class="wk">${complete}/${pool.length} complete</div></div>`;
+  pool.forEach(item=>{
+    const t=el("div","thread"); const isDone=item.at>=item.total;
+    const ti=el("div","ti");
+    const pct=item.total?Math.round(item.at/item.total*100):0;
+    ti.innerHTML=`<div class="nm${isDone?" done":""}">${esc(item.label)}</div>
+      <div class="cad">${item.at}/${item.total}${showTier&&item.tier?" · Tier "+item.tier:""}</div>
+      <div class="pbar"><i style="width:${pct}%"></i></div>`;
+    t.appendChild(ti);
+    if(item.total>1){
+      const c=el("div","counter");
+      const m=el("button"); m.textContent="–"; m.onclick=()=>{ item.at=Math.max(0,item.at-1); save(); render(); };
+      const nn=el("span","num"); nn.textContent=item.at+"/"+item.total;
+      const pl=el("button"); pl.textContent="+"; pl.onclick=()=>{ item.at=Math.min(item.total,item.at+1); save(); render(); };
+      c.append(m,nn,pl); t.appendChild(c);
+    } else {
+      const chk=el("div","pchk"+(isDone?" on":"")); chk.innerHTML=isDone?'<svg viewBox="0 0 12 12"><path d="M1 6l3.5 3.5L11 2" fill="none" stroke="#06231b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':"";
+      chk.onclick=()=>{ item.at=isDone?0:1; save(); render(); };
+      t.appendChild(chk);
+    }
+    p.appendChild(t);
+  });
+  return p;
+}
+
+/* ---------- DATA ---------- */
+function viewData(){
+  const box=el("div");
+  if(!SAFE_TO_SAVE){
+    const f=el("div","flags"); const w=el("div","flag");
+    w.innerHTML=`<div class="fi">Data</div><div class="ft"><b>The data saved in this browser could not be loaded</b> (${esc(LOAD_ERROR&&LOAD_ERROR.message||"unknown error")}). You're looking at the starting plan in memory and <b>nothing is being saved</b>, so your stored data is untouched. Download it below to inspect or repair, pull from the cloud, import a good backup, or reset to start fresh.</div>`;
+    f.appendChild(w); box.appendChild(f);
+  }
+  const p=el("div","panel");
+  p.innerHTML=`<h2>Your data</h2><p class="sub">Everything lives in this browser's localStorage (and your private gist if sync is on). Export regularly — that JSON is your offline backup.</p>`;
+  const row=el("div","row");
+  const exp=el("button","btn pri"); exp.textContent="Export JSON"; exp.onclick=exportJSON;
+  const imp=el("button","btn"); imp.textContent="Import JSON";
+  const file=el("input"); file.type="file"; file.accept="application/json,.json"; file.style.display="none";
+  imp.onclick=()=>file.click(); file.onchange=e=>{ importJSON(e.target.files[0]); file.value=""; };
+  row.append(exp,imp,file);
+  if(!SAFE_TO_SAVE){ const raw=el("button","btn"); raw.textContent="Download stored (unloadable) data"; raw.onclick=downloadRawStored; row.append(raw); }
+  const reset=el("button","btn ghost"); reset.textContent="Reset to seed"; reset.style.marginLeft="auto";
+  reset.title="Wipe everything back to the starting plan. Export first if unsure."+(syncOn()?" This also overwrites the cloud copy.":"");
+  reset.onclick=()=>arm(reset,"Click again to wipe everything",()=>{ S=structuredClone(SEED); SAFE_TO_SAVE=true; LOAD_ERROR=null; NOTICE=null; OPEN.clear(); save(); render(); toast("Reset to the starting plan."); });
+  row.append(reset); p.appendChild(row); box.appendChild(p);
+  box.appendChild(syncPanel());
+
+  const bd=el("div","panel");
+  bd.innerHTML=`<h2>Budgets & pace</h2><p class="sub">Sessions planned per week in each mode. DEFAULT is also what "1.0×" velocity means, so raising it makes the projection ask more of you. Session hours only affect the hour estimates.</p>`;
+  bd.appendChild(inlineNum("DEFAULT sessions / week",S.budgets.DEFAULT,1,v=>S.budgets.DEFAULT=v));
+  bd.appendChild(inlineNum("REDUCED sessions / week",S.budgets.REDUCED,0,v=>S.budgets.REDUCED=v));
+  bd.appendChild(inlineNum("FALLBACK sessions / week",S.budgets.FALLBACK,0,v=>S.budgets.FALLBACK=v));
+  bd.appendChild(inlineNum("Soft cap (sessions / week)",S.softCap,1,v=>S.softCap=v));
+  bd.appendChild(inlineNum("Hours per session",S.sessionHours,0.25,v=>S.sessionHours=v,0.25));
+  bd.appendChild(inlineNum("Provisional velocity (× until 3 wks logged)",S.provisionalVelocity,0.05,v=>S.provisionalVelocity=v,0.05));
+  bd.appendChild(inlineNum("DSA problems target",S.dsaTarget,1,v=>S.dsaTarget=v));
+  box.appendChild(bd);
+
+  box.appendChild(historyPanel());
+
+  const ui=el("div","panel");
+  ui.innerHTML=`<h2>Display</h2><p class="sub">Text size multiplier for the whole app (1 = original, 1.2 = default, 1.5 = large).</p>`;
+  ui.appendChild(inlineNum("Text size (×)",S.ui.textScale,0.8,v=>S.ui.textScale=Math.min(2,v),0.05));
+  box.appendChild(ui);
+
+  const th=el("div","panel");
+  th.innerHTML=`<h2>Flag thresholds</h2><p class="sub">When the app nudges you.</p>`;
+  th.appendChild(inlineNum("Stale-work flag (days)",S.thresholds.stale,1,v=>S.thresholds.stale=v));
+  th.appendChild(inlineNum("Daily-rep flag (days)",S.thresholds.drill,1,v=>S.thresholds.drill=v));
+  th.appendChild(inlineNum("Keep-warm minutes",S.keepWarmMinutes,1,v=>S.keepWarmMinutes=v));
+  box.appendChild(th);
+
+  const pe=el("div","panel"); pe.innerHTML=`<h2>Profile</h2>`;
+  pe.appendChild(txt("Name",S.profile.name,v=>{ S.profile.name=v; return true; }));
+  pe.appendChild(txt("Current position",S.profile.position,v=>{ S.profile.position=v; return true; }));
+  pe.appendChild(txt("Journey start (YYYY-MM-DD)",S.meta.startDate,v=>{ if(!parseLocalDate(v)){ toast("Use a real date in YYYY-MM-DD form."); return false; } S.meta.startDate=v.trim(); return true; }));
+  box.appendChild(pe);
+
+  const hint=el("div","panel");
+  hint.innerHTML=`<h2>Deploying & data safety</h2><div class="muted-note" style="line-height:1.7">One self-contained file — put it on any free static host (Vercel, GitHub Pages, Netlify, Cloudflare Pages). <b>Your data is never on the host</b>: it lives in this browser's storage and, if cloud sync is on, in your private gist. Without sync each device is its own island — export/import to move data by hand. Nothing else phones home; no server of ours.</div>`;
+  box.appendChild(hint);
+  return box;
+}
+/* Closed weeks. Each row opens the backfill popup: tick tasks, log sittings, fix rep days and the
+   session count — all attributed to THAT week. Live logging on the Roadmap always belongs to the
+   current week; this popup is the only place the past can be edited, and it does so explicitly. */
+function historyPanel(){
+  const p=el("div","panel");
+  p.innerHTML=`<h2>Week history</h2><p class="sub">Closed weeks, newest first. Click one to open it — tick what you actually finished, log the sittings, fix quiz/DSA days. Everything you change in the popup is credited to <b>that</b> week (it feeds velocity) and the roadmap advances, so backfilled tasks never reappear in a new week plan.</p>`;
+  const thisKey=weekKey(new Date());
+  const rows=S.history.filter(h=>weekKey(new Date(h.startISO))!==thisKey).slice().reverse();
+  if(!rows.length){ const n=el("div","muted-note"); n.textContent="No closed weeks yet."; p.appendChild(n); return p; }
+  rows.forEach(h=>{
+    const f=el("div","field inline");
+    const l=el("label"); l.textContent="Week of "+fmtDate(weekStartOf(new Date(h.startISO)));
+    const s=el("span","muted-note"); s.textContent=(h.mode||"undeclared")+" · "+h.sessions+" session"+(h.sessions===1?"":"s")+(h.estimated?" (estimated)":"");
+    const b=el("button","btn"); b.textContent="Open →"; b.onclick=()=>openBackfill(weekKey(new Date(h.startISO)));
+    f.append(l,s,b); p.appendChild(f);
+  });
+  return p;
+}
+// The popup itself. Re-rendered from state on every change; scroll position is preserved.
+function backfillModal(){
+  const h=bfEntry(); if(!h) { BF=null; return null; }
+  const wkStart=weekStartOf(new Date(h.startISO));
+  const back=el("div","bf-back"); back.onclick=e=>{ if(e.target===back) closeBackfill(); };
+  const m=el("div","panel bf"); back.appendChild(m);
+  m.onscroll=()=>{ BF_SCROLL=m.scrollTop; };
+
+  const head=el("div","mode-head");
+  head.innerHTML=`<div><h2>Backfill · week of ${fmtDate(wkStart)}</h2><p class="sub" style="margin:2px 0 0">Everything here is credited to <b>this closed week</b> — the current week's count doesn't move.</p></div>`;
+  const close=el("button","btn"); close.textContent="Close"; close.onclick=closeBackfill;
+  head.appendChild(close); m.appendChild(head);
+
+  // record: mode + sessions
+  const rec=el("div","field inline");
+  const rl=el("label"); rl.textContent="Declared mode · sessions that week";
+  const sel=el("select");
+  [["","— undeclared"],["DEFAULT","DEFAULT"],["REDUCED","REDUCED"],["FALLBACK","FALLBACK"]].forEach(([v,t])=>{ const o=el("option"); o.value=v; o.textContent=t; if((h.mode||"")===v) o.selected=true; sel.appendChild(o); });
+  sel.onchange=()=>{ h.mode=sel.value||null; save(); render(); };
+  const num=el("input"); num.type="number"; num.min="0"; num.value=h.sessions; num.title="Override the session count by hand (sittings logged below adjust it automatically)";
+  num.onchange=()=>{ const v=parseInt(num.value,10); if(Number.isFinite(v)&&v>=0){ h.sessions=v; delete h.estimated; } save(); render(); };
+  rec.append(rl,sel,num); m.appendChild(rec);
+
+  // daily rep for that week
+  const rh=el("div","htrk"); rh.textContent="Daily rep that week (Q quiz · D DSA)"; m.appendChild(rh);
+  const strip=el("div","drill"); const today=isoDay(new Date());
+  [...Array(7)].map((_,i)=>addDays(wkStart,i)).forEach(d=>{
+    const ds=isoDay(d), sched=repTypeFor(d);
+    const logged = S.dsaLog.includes(ds) ? "dsa" : (S.drillLog.includes(ds) ? "drill" : null);
+    const c=el("button","dcell"+(logged?" on":"")+(ds===today?" today":""));
+    c.textContent=REP[logged||sched].letter;
+    c.title=fmtDate(d)+" · scheduled: "+REP[sched].name+(logged?" · logged: "+REP[logged].name:"");
+    c.onclick=()=>{ toggleRep(ds); save(); render(); };
+    strip.appendChild(c);
+  });
+  m.appendChild(strip);
+
+  // tasks, grouped by track — sittings logged here belong to this closed week
+  const th=el("div","htrk"); th.textContent="Tasks — tick ✓ finished · ± sittings credit this week"; m.appendChild(th);
+  S.tracks.forEach(t=>{
+    if(t.status==="done") return;
+    // only tracks you have actually started (or the active one) — future tracks would flood the list
+    if(t.status!=="active" && !t.tasks.some(hasProgress)) return;
+    const tt=el("div","htrk"); tt.textContent=t.name; tt.style.color="var(--accent)"; m.appendChild(tt);
+    t.tasks.forEach(x=>{
+      const complete=taskComplete(x);
+      const r=el("div","btask"+(complete?" done":""));
+      const chk=el("div","bchk"+(complete?" on":"")); chk.title=complete?"Reopen":"Mark finished (adds no sittings)";
+      chk.innerHTML=complete?'<svg viewBox="0 0 12 12" width="11" height="11"><path d="M1 6l3.5 3.5L11 2" fill="none" stroke="#06231b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':"";
+      chk.onclick=()=>bfToggleDone(t.id,x.id);
+      const lbl=el("div","lbl"); lbl.textContent=x.label;
+      const cnt=el("div","cnt"); cnt.textContent=x.logged+"/"+(x.done?Math.max(1,x.est):x.est);
+      const minus=el("button"); minus.textContent="–"; minus.title="Un-log one sitting from this week"; minus.onclick=()=>bfLogTask(t.id,x.id,-1);
+      const plus=el("button"); plus.textContent="+ sitting"; plus.title="Log one sitting, credited to this week"; plus.onclick=()=>bfLogTask(t.id,x.id,+1);
+      r.append(chk,lbl,cnt,minus,plus); m.appendChild(r);
+    });
+  });
+  (window.requestAnimationFrame||setTimeout)(()=>{ m.scrollTop=BF_SCROLL; });
+  return back;
+}
+function inlineNum(label,val,min,onset,step){
+  const f=el("div","field inline"); const l=el("label"); l.textContent=label;
+  const i=el("input"); i.type="number"; i.min=String(min); if(step) i.step=String(step); i.value=val;
+  i.onchange=()=>{ const v=step?parseFloat(i.value):parseInt(i.value,10); if(Number.isFinite(v)&&v>=min) onset(v); save(); render(); };
+  f.append(l,i); return f;
+}
+function txt(label,val,onset){
+  const f=el("div","field"); const l=el("label"); l.textContent=label;
+  const i=el("input"); i.value=val;
+  i.onchange=()=>{ if(onset(i.value)===false){ i.value=val; return; } save(); render(); };
+  f.append(l,i); return f;
+}
+
+/* ===================== ACTIONS ===================== */
+function declareWeek(mode){ NOTICE=null; S.currentWeek=generateWeek(mode, S.currentWeek); save(); render(); }
+function pullNext(){
+  const cur=S.currentWeek; if(!cur) return;
+  const next=cur.planned+1;
+  const before=cur.planned;
+  S.currentWeek=generateWeek(cur.mode, cur, next);
+  if(weekPlanned(S.currentWeek)<=before) toast("Nothing left to pull — every deep-work task on the roadmap is planned or complete.");
+  save(); render();
+}
+function pullPassive(group){
+  const cur=S.currentWeek; if(!cur) return;
+  const it=nextPassive(group, new Set(cur.items.map(i=>i.ref)));
+  if(!it){ toast("Nothing left in "+group+" — every item is either already in this week or complete."); return; }
+  it._done=false; cur.items.push(it); cur.dismissed=cur.dismissed.filter(g=>g!==group); save(); render();
+}
+// Remove a passive item the user added (or the mode added) by mistake. Undoes any pool unit it logged.
+// Remembers the dismissal for this week so Regenerate / mode re-declare doesn't put it straight back.
+function removeWeekItem(it){
+  const cur=S.currentWeek; if(!cur) return;
+  const i=cur.items.findIndex(x=>x.ref===it.ref); if(i<0) return;
+  const item=cur.items[i];
+  if(item.poolName){ const pi=poolItem(item.poolName,item.poolId); if(pi) pi.at=Math.max(0,pi.at-Math.max(0,item._applied||0)); if(!cur.dismissed.includes(item.poolName)) cur.dismissed.push(item.poolName); }
+  cur.items.splice(i,1); save(); render();
+}
+// Keep-warm item: a simple tick.
+function toggleWeekItem(it){
+  const cur=S.currentWeek; if(!cur) return;
+  const item=cur.items.find(x=>x.ref===it.ref); if(!item) return;
+  if(item.poolName){ logPoolUnit(it,+1); return; }
+  item._done=!item._done;
+  if(item.keepwarm && item._done) touch(item.trackId);
+  save(); render();
+}
+// Passive (pool) item: click = +1 unit, "–" = undo one. _applied = units logged via this week's row,
+// so removing the row or undoing can only give back what this week added. Returns true if changed.
+function logPoolUnit(it,delta){
+  const cur=S.currentWeek; if(!cur) return false;
+  const item=cur.items.find(x=>x.ref===it.ref); if(!item||!item.poolName) return false;
+  const pi=poolItem(item.poolName,item.poolId); if(!pi) return false;
+  const applied=Math.max(0,item._applied||0);
+  if(delta<0 && applied<=0) return false;
+  const before=pi.at; pi.at=clamp(pi.at+delta,0,pi.total); const d=pi.at-before;
+  if(!d) return false;
+  item._applied=Math.max(0,applied+d); item._done=item._applied>0;
+  save(); render(); return true;
+}
+function rollWeek(){
+  const cur=S.currentWeek; if(!cur) return;
+  const ws=weekSessions();
+  pushHistory({startISO:cur.startISO, mode:cur.mode, planned:cur.planned, sessions:ws});
+  S.currentWeek=null; NOTICE=null; save(); TAB="week"; render();
+  toast("Week rolled: "+ws+" session"+(ws===1?"":"s")+" logged as "+cur.mode+". Anything you log later this week still counts.");
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:"application/json"});
+  const a=el("a"); a.href=URL.createObjectURL(blob); a.download="journey-"+isoDay(new Date())+".json"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function downloadRawStored(){
+  let raw=null; try{ raw=localStorage.getItem(KEY); }catch(e){}
+  if(!raw){ toast("Nothing stored."); return; }
+  const blob=new Blob([raw],{type:"application/json"});
+  const a=el("a"); a.href=URL.createObjectURL(blob); a.download="journey-raw-"+isoDay(new Date())+".json"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importJSON(file){
+  if(!file) return; const r=new FileReader();
+  r.onload=()=>{
+    const prevS=S, prevSafe=SAFE_TO_SAVE, prevErr=LOAD_ERROR;
+    try{
+      const s=migrate(JSON.parse(r.result));
+      S=s; SAFE_TO_SAVE=true; LOAD_ERROR=null; NOTICE=null; OPEN.clear();
+      render();
+      save(); toast("Imported.");
+    }catch(e){
+      console.error("import failed",e);
+      S=prevS; SAFE_TO_SAVE=prevSafe; LOAD_ERROR=prevErr;
+      try{ render(); }catch(_){}
+      toast("That file didn't parse as valid journey JSON. Nothing was changed.\n\n"+(e&&e.message||""));
+    }
+  };
+  r.onerror=()=>toast("Couldn't read that file.");
+  r.readAsText(file);
+}
+
+/* ===================== BOOT ===================== */
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{ TAB=b.dataset.tab; render(); });
+render();
+if(syncOn()) syncPull("boot");
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(syncOn()) syncPull("visible"); else render(); } else syncFlushNow(); });
+window.addEventListener("pagehide",syncFlushNow);
+window.addEventListener("online",()=>{ if(syncOn()) syncPull("online"); });
+setInterval(renderSyncPill,60000);
+</script>
+</body>
+</html>
