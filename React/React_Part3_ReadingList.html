@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>React Part 3, updated for React 19</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6FA; --card:#FFFFFF; --ink:#161A24; --ink-2:#566075; --rule:#D5DAE5;
+    --accent:#5A49D8; --ok:#1B8661; --warn:#9A6500; --wash:rgba(154,101,0,.08);
+    --display:"Space Grotesk",system-ui,sans-serif;
+    --body:"Source Serif 4",Georgia,serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#11141C; --card:#1A1F2C; --ink:#E9EDF5; --ink-2:#96A1B7; --rule:#2D3546;
+      --accent:#9B8CFF; --ok:#5FD1A6; --warn:#E3AC4A; --wash:rgba(227,172,74,.09);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#11141C; --card:#1A1F2C; --ink:#E9EDF5; --ink-2:#96A1B7; --rule:#2D3546;
+    --accent:#9B8CFF; --ok:#5FD1A6; --warn:#E3AC4A; --wash:rgba(227,172,74,.09);
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--body); font-size:1.15rem; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent)}
+  code{
+    font-family:var(--mono); font-size:.84em; background:var(--paper); color:var(--ink);
+    padding:2px 5px; border-radius:2px; overflow-wrap:anywhere;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px 96px}
+
+  .masthead{padding:64px 0 36px;border-bottom:1px solid var(--rule)}
+  .eyebrow{
+    font-family:var(--mono); font-size:.76rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-2); margin:0 0 20px;
+  }
+  h1{
+    font-family:var(--display); font-weight:700; font-size:clamp(2.1rem,5.4vw,3.3rem);
+    line-height:1.06; letter-spacing:-.025em; margin:0 0 22px; max-width:18ch;
+  }
+  .lede{max-width:58ch;margin:0 0 12px;color:var(--ink-2)}
+  .lede strong{color:var(--ink);font-weight:600}
+  .lede:last-child{margin-bottom:0}
+
+  h2{
+    font-family:var(--display); font-weight:700; font-size:1.6rem; line-height:1.15;
+    letter-spacing:-.015em; margin:0 0 8px;
+  }
+  .sub{margin:0 0 20px;color:var(--ink-2);max-width:60ch}
+
+  /* install steps */
+  .install{padding:40px 0 8px}
+  .steps{list-style:none;margin:0;padding:0;border:1px solid var(--rule);border-radius:3px;background:var(--card)}
+  .steps li{padding:16px 18px;border-bottom:1px solid var(--rule)}
+  .steps li:last-child{border-bottom:none}
+  .steps .lbl{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ink-2); display:block; margin-bottom:6px;
+  }
+  .steps .cmd{
+    display:block; font-family:var(--mono); font-size:.92rem; font-weight:700;
+    background:var(--paper); padding:9px 12px; border-radius:2px; margin:0 0 8px;
+    overflow-wrap:anywhere;
+  }
+  .steps p{margin:0;font-size:1.02rem;color:var(--ink-2)}
+
+  /* sections */
+  .sec{padding:44px 0 0}
+  .sec .num{
+    font-family:var(--mono); font-size:.76rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); font-weight:700; margin:0 0 8px;
+  }
+  .changed{
+    margin:18px 0 22px; padding:14px 18px; border-left:2px solid var(--warn); background:var(--wash);
+  }
+  .changed.none{border-left-color:var(--ok);background:transparent;padding:0 0 0 16px}
+  .changed h3{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+    font-weight:700; color:var(--warn); margin:0 0 8px;
+  }
+  .changed.none h3{color:var(--ok)}
+  .changed ul{margin:0;padding-left:1.1em}
+  .changed li{margin-bottom:7px;font-size:1.04rem}
+  .changed li:last-child{margin-bottom:0}
+  .changed p{margin:0;font-size:1.04rem}
+
+  .reads{list-style:none;margin:0;padding:0}
+  .read{
+    background:var(--card); border:1px solid var(--rule); border-radius:3px;
+    padding:18px 20px; margin-bottom:12px;
+  }
+  .read h4{
+    font-family:var(--display); font-weight:700; font-size:1.22rem; line-height:1.25;
+    letter-spacing:-.01em; margin:0 0 4px;
+  }
+  .read h4 a{text-decoration:none;border-bottom:1px solid var(--accent)}
+  .read h4 a:hover{color:var(--ink);border-color:var(--ink)}
+  .read .by{font-family:var(--mono);font-size:.78rem;color:var(--ink-2);margin:0 0 10px}
+  .read .why{margin:0 0 10px;color:var(--ink-2);font-size:1.04rem}
+  .read ul{margin:0 0 12px;padding-left:1.1em;list-style:disc}
+  .read li{margin-bottom:6px;font-size:1.04rem}
+  .read.done h4 a{color:var(--ink-2);border-color:var(--rule);text-decoration:line-through;text-decoration-thickness:1px}
+
+  .tick{
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    font-family:var(--mono); font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2);
+  }
+  .tick input{width:17px;height:17px;accent-color:var(--ok);margin:0;cursor:pointer}
+
+  .progress{
+    font-family:var(--mono); font-size:.8rem; color:var(--ink-2);
+    margin:40px 0 0; padding-top:20px; border-top:1px solid var(--rule);
+  }
+  .foot{font-size:1rem;color:var(--ink-2);max-width:62ch;margin:14px 0 0}
+
+  :is(a,input):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  @media (max-width:640px){
+    .wrap{padding-left:18px;padding-right:18px}
+    .masthead{padding:44px 0 30px}
+    .read{padding:16px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Ultimate React Course · Part 3 · checked 1 Oct 2026</p>
+    <h1>Part 3, brought up to date with React 19</h1>
+    <p class="lede">For each section of Part 3 this page tells you two things: <strong>what has changed since Jonas recorded the video</strong>, and <strong>what to read instead</strong>. Every link is current official documentation. Nothing here is about a deprecated or abandoned tool.</p>
+    <p class="lede">How to use it: do the install steps once, then before each section read its "changed since the video" box and its one to four links. Fourteen links, about three hours in total.</p>
+  </header>
+
+  <section class="install">
+    <h2>Install these instead of what the video types</h2>
+    <p class="sub">First run <code>node -v</code>. You need Node 22.22 or newer for the current React Router. If yours is older, update Node before starting.</p>
+    <ol class="steps">
+      <li>
+        <span class="lbl">Every new project · instead of create-react-app</span>
+        <code class="cmd">npm create vite@latest</code>
+        <p>Create React App was retired in February 2025. Vite is what Jonas himself switches to for WorldWise. Your entry file is <code>src/main.jsx</code> rather than <code>src/index.js</code>.</p>
+      </li>
+      <li>
+        <span class="lbl">Fake API · React Quiz and WorldWise</span>
+        <code class="cmd">npm i json-server@0.17.4</code>
+        <p>This is the latest stable release. Plain <code>npm i json-server</code> gives you a 1.0 beta that has no <code>--delay</code> option, so Jonas's start script fails on it.</p>
+      </li>
+      <li>
+        <span class="lbl">Routing · instead of react-router-dom</span>
+        <code class="cmd">npm i react-router</code>
+        <p>The <code>react-router-dom</code> package no longer exists in the current version. Wherever Jonas writes <code>from "react-router-dom"</code>, write <code>from "react-router"</code>. Everything else in his routing code stays the same.</p>
+      </li>
+      <li>
+        <span class="lbl">Map · WorldWise</span>
+        <code class="cmd">npm i react-leaflet leaflet</code>
+        <p>Same command as the video. The current version needs React 19, which a new Vite project already has.</p>
+      </li>
+      <li>
+        <span class="lbl">Redux · instead of redux, redux-thunk and redux-devtools-extension</span>
+        <code class="cmd">npm i @reduxjs/toolkit react-redux</code>
+        <p>Redux Toolkit already contains thunks and the DevTools connection. If you want to type along with the older <code>createStore</code> lectures as well, add <code>npm i redux redux-thunk</code> and write <code>import { thunk } from "redux-thunk"</code> (with braces).</p>
+      </li>
+    </ol>
+  </section>
+
+  <div id="sections"></div>
+
+  <p class="progress" id="progress"></p>
+  <p class="foot">Ticks are saved in this browser only. Section numbers continue from your Part 2 page; Udemy's sidebar may show them as 16 to 20.</p>
+  <p class="foot">How this was checked: every link was confirmed against the live site or the documentation's own source repository, and package versions against the npm registry. The React Leaflet page was last opened on 30 September.</p>
+
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    num:"Section 13", title:"useReducer", project:"React Quiz",
+    changed:null,
+    same:"Nothing to unlearn. <code>useReducer</code> works in React 19 exactly as Jonas shows it. Only the project setup differs (Vite and json-server, in the install steps above).",
+    reads:[
+      {
+        t:"Extracting State Logic into a Reducer", by:"react.dev · 20 min",
+        url:"https://react.dev/learn/extracting-state-logic-into-a-reducer",
+        why:"The same refactor Jonas does in React Quiz: several <code>useState</code> calls become one reducer.",
+        k:[
+          "Event handlers stop saying how to change state and start saying what happened: <code>dispatch({ type: 'added' })</code>.",
+          "A reducer takes the current state and an action and returns the next state. No fetching, no timers, no changing the old state.",
+          "If a <code>console.log</code> in your reducer prints twice, that is StrictMode checking your reducer in development. It is not a bug."
+        ]
+      }
+    ]
+  },
+  {
+    num:"Section 14", title:"React Router, CSS Modules and the map", project:"WorldWise",
+    changed:[
+      "The package is now <code>react-router</code>. Import from <code>\"react-router\"</code>, not <code>\"react-router-dom\"</code>.",
+      "React Router now has three \u201cmodes\u201d. Jonas's code in this section is <b>Declarative mode</b>. Most of the documentation is about the other two, so stay on the Declarative pages.",
+      "Everything he uses has kept its name: <code>BrowserRouter</code>, <code>Routes</code>, <code>Route</code>, <code>NavLink</code>, <code>Outlet</code>, <code>Navigate</code>, <code>useParams</code>, <code>useSearchParams</code>, <code>useNavigate</code>."
+    ],
+    reads:[
+      {
+        t:"Picking a Mode", by:"reactrouter.com · 5 min",
+        url:"https://reactrouter.com/start/modes",
+        why:"Read this first. It explains why most of the React Router docs look nothing like the course.",
+        k:[
+          "Declarative mode is <code>&lt;BrowserRouter&gt;</code> with <code>&lt;Routes&gt;</code> and <code>&lt;Route&gt;</code>. That is this section.",
+          "Data mode adds loaders and actions with <code>createBrowserRouter</code>. That is Part 4 of the course.",
+          "Framework mode is not used in the course."
+        ]
+      },
+      {
+        t:"Declarative Mode: Routing", by:"reactrouter.com · 10 min, plus the two short pages after it",
+        url:"https://reactrouter.com/start/declarative/routing",
+        why:"The current documentation for exactly what Jonas builds. Continue to Navigating and URL Values, which follow it in the sidebar.",
+        k:[
+          "Nested routes render inside the parent's <code>&lt;Outlet /&gt;</code>. An <code>index</code> route shows when no child path matches.",
+          "<code>useParams</code> reads the <code>:id</code> part of the URL; <code>useSearchParams</code> reads <code>?lat=..&amp;lng=..</code>. Both always give you strings.",
+          "The big idea of the section: put state such as the selected city in the URL, so the page can be shared and the back button works."
+        ]
+      },
+      {
+        t:"CSS Modules", by:"css-modules on GitHub · 2 min",
+        url:"https://github.com/css-modules/css-modules",
+        why:"The README is enough. Vite supports this with no setup: name the file <code>Something.module.css</code>.",
+        k:[
+          "Class names are private to their file, so <code>.nav</code> in two components cannot clash.",
+          "You use them as <code>className={styles.nav}</code>.",
+          "<code>:global(.active)</code> is how you style the <code>active</code> class React Router puts on a <code>NavLink</code>."
+        ]
+      },
+      {
+        t:"React Leaflet: Installation", by:"react-leaflet.js.org · 5 min",
+        url:"https://react-leaflet.js.org/docs/start-installation/",
+        why:"The current docs. Use the install command from the top of this page, not the ones printed there, which still mention a pre-release.",
+        k:[
+          "Leaflet's own CSS must be loaded and the map needs a fixed height, or you get scattered tiles or nothing at all.",
+          "<code>MapContainer</code> reads its props once. To move the map later you need a child component that calls <code>useMap()</code>, which is what Jonas writes.",
+          "Map clicks are handled with <code>useMapEvents</code> in a child component."
+        ]
+      }
+    ]
+  },
+  {
+    num:"Section 15", title:"Context API", project:"WorldWise",
+    changed:[
+      "In React 19 you render the context itself: <code>&lt;CitiesContext value={...}&gt;</code>. Jonas writes <code>&lt;CitiesContext.Provider value={...}&gt;</code>, which still works, but the React docs now use only the short form.",
+      "Reading a context with <code>useContext</code>, and wrapping it in your own hook such as <code>useCities()</code>, is unchanged."
+    ],
+    reads:[
+      {
+        t:"Passing Data Deeply with Context", by:"react.dev · 20 min",
+        url:"https://react.dev/learn/passing-data-deeply-with-context",
+        why:"The official introduction, written with the React 19 syntax.",
+        k:[
+          "Three steps: create the context, provide a value high in the tree, read it anywhere below.",
+          "Context is for avoiding long chains of props. Try passing props or <code>children</code> first; reach for context when that gets painful.",
+          "Every component that reads a context re-renders when its value changes."
+        ]
+      },
+      {
+        t:"Scaling Up with Reducer and Context", by:"react.dev · 20 min",
+        url:"https://react.dev/learn/scaling-up-with-reducer-and-context",
+        why:"Exactly the pattern Jonas builds in <code>CitiesContext</code>: a reducer for the logic, context to deliver it.",
+        k:[
+          "Keep the reducer, the context and the provider component together in one file.",
+          "Export custom hooks from that file, so components import one hook and know nothing about the wiring."
+        ]
+      }
+    ]
+  },
+  {
+    num:"Section 16", title:"Performance and advanced useEffect", project:"Atomic Blog and the workout timer",
+    changed:[
+      "<b>React Compiler</b> now does automatically what <code>memo</code>, <code>useMemo</code> and <code>useCallback</code> do by hand. It has been stable since October 2025. In new code you rarely write those three yourself.",
+      "Still watch these lectures. You will meet the three manual tools in every existing codebase, and they explain what the compiler is doing.",
+      "If the \u201cwasted render\u201d demos do not happen on your machine, your project has the compiler switched on. Look for <code>reactCompilerPreset</code> in <code>vite.config.js</code> and remove it for this section.",
+      "For stale values inside an effect there is now a built-in hook, <code>useEffectEvent</code>. Jonas solves the same problem by other means because it did not exist yet.",
+      "Code splitting with <code>lazy</code> and <code>Suspense</code>, and the Profiler, are unchanged."
+    ],
+    reads:[
+      {
+        t:"React Compiler: Introduction", by:"react.dev · 10 min",
+        url:"https://react.dev/learn/react-compiler/introduction",
+        why:"Read before the memo lectures, so you know which parts are history and which are still your job.",
+        k:[
+          "It memoises components and values at build time, with no changes to your code.",
+          "It only works on code that follows the rules Jonas has taught since Part 2: pure rendering, never mutating props or state.",
+          "It does not make a slow component fast. Finding the slow part with the Profiler is still up to you."
+        ]
+      },
+      {
+        t:"memo: the React Compiler questions", by:"react.dev reference · 5 min",
+        url:"https://react.dev/reference/react/memo",
+        why:"Read the top of the page and the part titled \u201cDo I still need React.memo if I use React Compiler?\u201d",
+        k:[
+          "Shows the same component with manual <code>memo</code> and with the compiler, side by side.",
+          "<code>memo</code> only helps when the props are the same between renders. A new object or function prop defeats it, which is the reason <code>useMemo</code> and <code>useCallback</code> exist."
+        ]
+      },
+      {
+        t:"You Might Not Need an Effect", by:"react.dev · 30 min",
+        url:"https://react.dev/learn/you-might-not-need-an-effect",
+        why:"The most useful page on this list. Most effect bugs come from using an effect where none was needed.",
+        k:[
+          "To calculate something from props or state, do it during render. No effect.",
+          "To respond to a click or a submit, put the code in the event handler. No effect.",
+          "Effects are for things outside React: the network, a timer, a browser API."
+        ]
+      },
+      {
+        t:"Separating Events from Effects", by:"react.dev · 20 min",
+        url:"https://react.dev/learn/separating-events-from-effects",
+        why:"The current answer to the stale-closure problem Jonas shows in the workout timer.",
+        k:[
+          "An effect re-runs whenever a value it reads changes. Sometimes you want to read the latest value without re-running.",
+          "<code>useEffectEvent</code> is the hook for that part.",
+          "Never switch off the dependency lint rule to stop an effect re-running."
+        ]
+      }
+    ]
+  },
+  {
+    num:"Section 17", title:"Redux", project:"Bank account",
+    changed:[
+      "The first half of this section (<code>createStore</code>, hand-written action creators, adding thunk middleware and the DevTools package yourself) is the old style. Redux itself marks <code>createStore</code> as deprecated. Watch it to understand how Redux works; do not write new code that way.",
+      "The second half, <b>Redux Toolkit</b> with <code>configureStore</code> and <code>createSlice</code>, is how Redux is written today and is current.",
+      "<code>Provider</code>, <code>useSelector</code> and <code>useDispatch</code> from <code>react-redux</code> are unchanged."
+    ],
+    reads:[
+      {
+        t:"Why Redux Toolkit is How To Use Redux Today", by:"redux.js.org · 10 min",
+        url:"https://redux.js.org/introduction/why-rtk-is-redux-today",
+        why:"The Redux team's own explanation of which half of Jonas's section is current and why.",
+        k:[
+          "Redux Toolkit is the official, recommended way to write any Redux code.",
+          "It wraps the original <code>redux</code> package and removes the hand-written boilerplate."
+        ]
+      },
+      {
+        t:"Redux Quick Start", by:"redux.js.org · 15 min",
+        url:"https://redux.js.org/tutorials/quick-start",
+        why:"A working Toolkit store in one page. The examples are in TypeScript; the section at the end, \u201cUsing Plain JavaScript\u201d, says what to leave out.",
+        k:[
+          "<code>configureStore</code> creates the store; <code>createSlice</code> creates a reducer and its actions together.",
+          "Inside <code>createSlice</code> you may write code that looks like it mutates state. Toolkit turns it into a safe update for you."
+        ]
+      },
+      {
+        t:"React-Redux Hooks", by:"redux.js.org · 10 min",
+        url:"https://redux.js.org/react-redux/api/hooks",
+        why:"Read the <code>useSelector</code> part while you connect components to the store.",
+        k:[
+          "Select the smallest value you need. Returning a new object from a selector re-renders the component on every action.",
+          "Call <code>useSelector</code> several times rather than building one object."
+        ]
+      }
+    ]
+  }
+];
+
+const KEY = "react-part3-done-v2";
+let done;
+try { done = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) { done = new Set(); }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify([...done])); } catch (e) {} }
+
+const total = SECTIONS.reduce((n, s) => n + s.reads.length, 0);
+const progress = document.getElementById("progress");
+function showProgress(){ progress.textContent = `${done.size} of ${total} read`; }
+
+const host = document.getElementById("sections");
+
+SECTIONS.forEach(s => {
+  const sec = document.createElement("section");
+  sec.className = "sec";
+
+  const changed = s.changed
+    ? `<div class="changed"><h3>Changed since the video</h3><ul>${s.changed.map(c => `<li>${c}</li>`).join("")}</ul></div>`
+    : `<div class="changed none"><h3>Still current</h3><p>${s.same}</p></div>`;
+
+  sec.innerHTML = `
+    <p class="num">${s.num} · ${s.project}</p>
+    <h2>${s.title}</h2>
+    ${changed}
+    <ul class="reads"></ul>`;
+
+  const list = sec.querySelector(".reads");
+
+  s.reads.forEach(r => {
+    const li = document.createElement("li");
+    const isDone = done.has(r.url);
+    li.className = "read" + (isDone ? " done" : "");
+    li.innerHTML = `
+      <h4><a href="${r.url}" target="_blank" rel="noopener">${r.t}</a></h4>
+      <p class="by">${r.by}</p>
+      <p class="why">${r.why}</p>
+      <ul>${r.k.map(x => `<li>${x}</li>`).join("")}</ul>
+      <label class="tick"><input type="checkbox" ${isDone ? "checked" : ""}> I have read this</label>`;
+    li.querySelector("input").addEventListener("change", e => {
+      if (e.target.checked) done.add(r.url); else done.delete(r.url);
+      li.classList.toggle("done", e.target.checked);
+      save();
+      showProgress();
+    });
+    list.appendChild(li);
+  });
+
+  host.appendChild(sec);
+});
+
+showProgress();
+</script>
+</body>
+</html>
